@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">E-SIMAKSI</string>
+    
+    <!-- Supabase Configuration -->
+    <!-- IMPORTANT: These are placeholder values. Replace with your actual Supabase project URL and Anon Key -->
+    <!-- For production, do NOT store sensitive keys directly in the app. Use a more secure method -->
+    <string name="supabase_url">YOUR_SUPABASE_PROJECT_URL_HERE</string>
+    <string name="supabase_anon_key">YOUR_SUPABASE_ANON_KEY_HERE</string>
 </resources>
