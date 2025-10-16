@@ -19,6 +19,6 @@ class EsimaksiApplication : Application() {
         // SupabaseClient.initialize(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         
         // Initialize Supabase with the values
-        SupabaseClient.initialize(supabaseUrl, supabaseAnonKey)
+        //SupabaseClient.initialize(supabaseUrl, supabaseAnonKey)
     }
 }

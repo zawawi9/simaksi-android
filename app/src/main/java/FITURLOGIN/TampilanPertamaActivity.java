@@ -40,7 +40,7 @@ public class TampilanPertamaActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Buat Intent untuk pergi ke RegisterActivity
-                Intent intent = new Intent(TampilanPertamaActivity.this, Register1Activity.class);
+                Intent intent = new Intent(TampilanPertamaActivity.this, RegisterActivity.class);
                 startActivity(intent);
             }
         });

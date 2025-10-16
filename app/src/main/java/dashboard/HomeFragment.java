@@ -1,4 +1,4 @@
-package com.zawww.e_simaksi.dashboard;
+package dashboard;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -32,12 +32,12 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         // Inisialisasi semua komponen UI yang ada di layout
-        cardJadwalKosong = view.findViewById(R.id.card_jadwal_kosong);
-        cardJadwalAda = view.findViewById(R.id.card_jadwal_ada);
-        tvTanggalPendakian = view.findViewById(R.id.tv_tanggal_pendakian);
-        tvKodeBooking = view.findViewById(R.id.tv_kode_booking);
-        tvJumlahPendaki = view.findViewById(R.id.tv_jumlah_pendaki);
-        btnLihatDetail = view.findViewById(R.id.btn_lihat_detail);
+        //cardJadwalKosong = view.findViewById(R.id.card_jadwal_kosong);
+        //cardJadwalAda = view.findViewById(R.id.card_jadwal_ada);
+        //tvTanggalPendakian = view.findViewById(R.id.tv_tanggal_pendakian);
+        //tvKodeBooking = view.findViewById(R.id.tv_kode_booking);
+        //tvJumlahPendaki = view.findViewById(R.id.tv_jumlah_pendaki);
+        //btnLihatDetail = view.findViewById(R.id.btn_lihat_detail);
 
         // Nanti, di sini Anda akan memanggil data dari Supabase.
         // Untuk sekarang, kita bisa panggil salah satu fungsi di bawah untuk testing UI.

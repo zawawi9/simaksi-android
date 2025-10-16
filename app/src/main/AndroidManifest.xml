@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".EsimaksiApplication"
@@ -16,10 +17,7 @@
             android:name="dashboard.MainActivity"
             android:exported="false" />
         <activity
-            android:name="FITURLOGIN.Register2Activity"
-            android:exported="false" />
-        <activity
-            android:name="FITURLOGIN.Register1Activity"
+            android:name="FITURLOGIN.RegisterActivity"
             android:exported="false" />
         <activity
             android:name="FITURLOGIN.TampilanPertamaActivity"

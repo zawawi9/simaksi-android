@@ -9,6 +9,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -18,6 +19,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.zawww.e_simaksi.R;
+import com.zawww.e_simaksi.api.SupabaseAuth;
 
 import dashboard.MainActivity;
 
@@ -27,9 +29,7 @@ public class LoginActivity extends AppCompatActivity {
     TextInputLayout textFieldUsername, textFieldPassword;
     TextInputEditText editTextUsername, editTextPassword;
     MaterialButton buttonLogin;
-    final String USERNAME_TERDAFTAR = "zawawi";
-    final String PASSWORD_TERDAFTAR = "123456";
-
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,68 +43,74 @@ public class LoginActivity extends AppCompatActivity {
         textFieldPassword = findViewById(R.id.textFieldPassword);
         editTextPassword = findViewById(R.id.editTextPassword);
         buttonLogin = findViewById(R.id.buttonLogin);
+        progressBar = findViewById(R.id.progressBar);
 
-        buttonLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Ambil input
-                String username = editTextUsername.getText().toString().trim();
-                String password = editTextPassword.getText().toString().trim();
-                ProgressBar progressBar = findViewById(R.id.progressBar);
-                progressBar.setVisibility(View.VISIBLE);
+        buttonLogin.setOnClickListener(v -> {
+            String email = editTextUsername.getText().toString().trim();
+            String password = editTextPassword.getText().toString().trim();
 
-                // Reset error
-                textFieldUsername.setError(null);
-                textFieldPassword.setError(null);
+            // Reset error
+            textFieldUsername.setError(null);
+            textFieldPassword.setError(null);
 
-                // Validasi input kosong
-                if (username.isEmpty()) {
-                    textFieldUsername.setError("Username tidak boleh kosong");
-                    return;
-                }
-                if (password.isEmpty()) {
-                    textFieldPassword.setError("Password tidak boleh kosong");
-                    return;
-                }
+            // Validasi input
+            if (email.isEmpty()) {
+                textFieldUsername.setError("Email tidak boleh kosong");
+                return;
+            }
+            if (password.isEmpty()) {
+                textFieldPassword.setError("Password tidak boleh kosong");
+                return;
+            }
 
-                // Cek kredensial
-                if (username.equals(USERNAME_TERDAFTAR) && password.equals(PASSWORD_TERDAFTAR)) {
-                    // JIKA LOGIN BERHASIL
+            progressBar.setVisibility(View.VISIBLE);
+            buttonLogin.setEnabled(false);
+
+            SupabaseAuth.loginUser(email, password, new SupabaseAuth.AuthCallback() {
+                @Override
+                public void onSuccess(String accessToken, String userId) {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(LoginActivity.this, "Login Berhasil!", Toast.LENGTH_SHORT).show();
-                    // Di sini Anda akan pindah ke halaman utama aplikasi
-                    // Contoh: Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-                    // startActivity(intent);
-                     // Tutup halaman login agar tidak bisa kembali
-                    // Simpan status login
-                    SharedPreferences sharedPreferences = getSharedPreferences("app_prefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    buttonLogin.setEnabled(true);
+                    Toast.makeText(LoginActivity.this, "Login berhasil!", Toast.LENGTH_SHORT).show();
+
+                    // Simpan ke SharedPreferences
+                    SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
                     editor.putBoolean("isLoggedIn", true);
+                    editor.putString("accessToken", accessToken);
+                    editor.putString("userId", userId);
                     editor.apply();
+
+                    // Pindah ke dashboard
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
-
-// Pindah ke halaman utama
-// ...
-                } else {
-                    // JIKA GAGAL
-                    Toast.makeText(LoginActivity.this, "Username atau Password salah!", Toast.LENGTH_LONG).show();
                 }
-            }
+
+                @Override
+                public void onError(String errorMessage) {
+                    progressBar.setVisibility(View.GONE);
+                    buttonLogin.setEnabled(true);
+                    showErrorDialog(errorMessage);
+                }
+            });
         });
 
-        backArrow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        backArrow.setOnClickListener(v -> finish());
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    private void showErrorDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Gagal Login")
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 }

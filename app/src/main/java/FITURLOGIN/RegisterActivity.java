@@ -1,10 +1,10 @@
 package FITURLOGIN;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.ImageView;
-import android.util.Patterns;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,44 +17,36 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.zawww.e_simaksi.R;
+import com.zawww.e_simaksi.api.SupabaseAuth;
 
-public class Register1Activity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
 
     ImageView backArrow;
-    TextInputLayout textFieldEmail, textFieldUsername, textFieldPassword, textFieldName;
-    TextInputEditText editTextEmail, editTextUsername, editTextPassword, editTextName;
+    TextInputLayout textFieldEmail, textFieldUsername, textFieldPassword;
+    TextInputEditText editTextEmail, editTextUsername, editTextPassword;
     MaterialButton buttonNext;
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_register1);
+        setContentView(R.layout.activity_register);
 
+        // Inisialisasi komponen UI
         textFieldEmail = findViewById(R.id.textFieldEmail);
         editTextEmail = findViewById(R.id.editTextEmail);
         textFieldUsername = findViewById(R.id.textFieldUsername);
         editTextUsername = findViewById(R.id.editTextUsername);
-        textFieldName = findViewById(R.id.textFieldFullname);
-        editTextName = findViewById(R.id.editTextFullname);
         textFieldPassword = findViewById(R.id.textFieldPassword);
         editTextPassword = findViewById(R.id.editTextPassword);
         backArrow = findViewById(R.id.backArrowImageView);
         buttonNext = findViewById(R.id.buttonNext);
+        progressBar = findViewById(R.id.progressBar);
 
-        backArrow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish(); // Menutup activity saat ini dan kembali ke halaman sebelumnya
-            }
-        });
+        backArrow.setOnClickListener(v -> finish());
 
-        buttonNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                validateAndProceed();
-            }
-        });
+        buttonNext.setOnClickListener(v -> validateAndProceed());
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -62,22 +54,21 @@ public class Register1Activity extends AppCompatActivity {
             return insets;
         });
     }
+
     private void validateAndProceed() {
-        // 1. Ambil semua input dari user
-        String name = editTextName.getText().toString().trim();
         String email = editTextEmail.getText().toString().trim();
-        String username = editTextUsername.getText().toString().trim();
+        String username = editTextUsername.getText().toString().trim(); // → akan dikirim ke kolom nama_lengkap
         String password = editTextPassword.getText().toString().trim();
 
-        // Reset error sebelumnya
+        // Reset error
         textFieldEmail.setError(null);
         textFieldUsername.setError(null);
         textFieldPassword.setError(null);
 
-        // 2. Mulai Validasi
+        // Validasi input
         if (email.isEmpty()) {
             textFieldEmail.setError("Email tidak boleh kosong");
-            return; // Hentikan proses
+            return;
         }
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -86,12 +77,7 @@ public class Register1Activity extends AppCompatActivity {
         }
 
         if (username.isEmpty()) {
-            textFieldUsername.setError("Username tidak boleh kosong");
-            return;
-        }
-
-        if (name.isEmpty()) {
-            textFieldName.setError("Nama tidak boleh kosong");
+            textFieldUsername.setError("Nama lengkap tidak boleh kosong");
             return;
         }
 
@@ -105,16 +91,26 @@ public class Register1Activity extends AppCompatActivity {
             return;
         }
 
-        // 3. Jika semua validasi lolos
-        // Buat objek User baru dari data yang diinput
-        User newUser = new User(email, username, password, name);
+        // Jika valid → tampilkan loading
+        progressBar.setVisibility(View.VISIBLE);
+        buttonNext.setEnabled(false);
 
-        // Di aplikasi nyata, objek "newUser" ini akan disimpan ke database.
-        // Untuk sekarang, kita tampilkan pesan Toast sebagai simulasi.
-        Toast.makeText(this, "Data valid! User: " + newUser.getUsername(), Toast.LENGTH_SHORT).show();
+        // Panggil fungsi register Supabase
+        SupabaseAuth.registerUser(email, password, username, new SupabaseAuth.RegisterCallback() {
+            @Override
+            public void onSuccess() {
+                progressBar.setVisibility(View.GONE);
+                buttonNext.setEnabled(true);
+                Toast.makeText(RegisterActivity.this, "Registrasi berhasil! Cek email untuk verifikasi.", Toast.LENGTH_LONG).show();
+                finish(); // Tutup activity, balik ke login
+            }
 
-        // Lanjutkan ke langkah berikutnya
-        Intent intent = new Intent(Register1Activity.this, Register2Activity.class);
-        startActivity(intent);
+            @Override
+            public void onError(String errorMessage) {
+                progressBar.setVisibility(View.GONE);
+                buttonNext.setEnabled(true);
+                Toast.makeText(RegisterActivity.this, "Gagal: " + errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

@@ -13,7 +13,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.zawww.e_simaksi.R;
-import com.zawww.e_simaksi.dashboard.HomeFragment; // PERBAIKAN: Import HomeFragment ditambahkan
+import dashboard.HomeFragment; // PERBAIKAN: Import HomeFragment ditambahkan
 
 public class MainActivity extends AppCompatActivity {
 
