@@ -4,36 +4,34 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import dashboard.HomeFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.zawww.e_simaksi.R;
-import dashboard.HomeFragment; // PERBAIKAN: Import HomeFragment ditambahkan
 
 public class MainActivity extends AppCompatActivity {
 
-    private BottomNavigationView bottomNavigationView;
+    BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Kode boilerplate EdgeToEdge Anda (sudah benar)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        // Atur listener untuk merespon klik
+        // Set default fragment saat aplikasi dibuka
+        if (savedInstanceState == null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new HomeFragment())
+                    .commit();
+        }
+
+        // Listener untuk navigasi
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
@@ -42,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
                 return true; // Berhasil, item dipilih
             } else if (itemId == R.id.nav_transaksi) {
                 Toast.makeText(this, "Fitur Transaksi akan segera hadir!", Toast.LENGTH_SHORT).show();
+                loadFragment(new TransaksiFragment());
                 return false; // Gagal, item tidak akan dipilih (highlight)
             } else if (itemId == R.id.nav_profil) {
                 Toast.makeText(this, "Fitur Profil akan segera hadir!", Toast.LENGTH_SHORT).show();
@@ -57,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.setSelectedItemId(R.id.nav_beranda);
         }
     }
-    // Fungsi ini sudah bagus, tidak perlu diubah
     private void loadFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
