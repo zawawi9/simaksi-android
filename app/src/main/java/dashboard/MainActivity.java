@@ -62,8 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Animasi transisi (opsional, tapi membuat UI lebih smooth)
         fragmentTransaction.setCustomAnimations(
-                android.R.anim.fade_in, // animasi masuk
-                android.R.anim.fade_out, // animasi keluar
                 android.R.anim.fade_in,
                 android.R.anim.fade_out
         );
