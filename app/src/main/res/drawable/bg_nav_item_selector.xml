@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/bg_nav_item_active" android:state_checked="true" />
-    <item android:drawable="@android:color/transparent" android:state_checked="false" />
-</selector>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#1A388E3C">
+    <item android:id="@android:id/background">
+        <selector>
+            <item android:state_checked="true" android:drawable="@drawable/bg_nav_item_active" />
+            <item android:drawable="@android:color/transparent" />
+        </selector>
+    </item>
+</ripple>

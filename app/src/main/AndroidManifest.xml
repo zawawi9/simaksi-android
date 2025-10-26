@@ -21,6 +21,9 @@
             android:exported="false" />
         <activity
             android:name="FITURLOGIN.TampilanPertamaActivity"
+            android:exported="false" />
+        <activity
+            android:name="FITURLOGIN.SplashScreenActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

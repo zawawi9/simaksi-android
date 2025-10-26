@@ -12,10 +12,12 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.zawww.e_simaksi.R;
+import dashboard.MainActivity;
 
 public class TampilanPertamaActivity extends AppCompatActivity {
 
     MaterialButton buttonLogin, buttonRegister;
+    private SessionManager sessionManager;
 
 
     @Override
@@ -24,8 +26,20 @@ public class TampilanPertamaActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_tampilan_pertama);
 
+        // Initialize session manager
+        sessionManager = new SessionManager(this);
+        
         buttonLogin = findViewById(R.id.buttonLogin);
         buttonRegister = findViewById(R.id.buttonRegister);
+
+        // Check if user is already logged in
+        if (sessionManager.isLoggedIn()) {
+            // Jika sudah login, langsung ke MainActivity
+            Intent intent = new Intent(TampilanPertamaActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+            return; // Keluar dari onCreate agar tidak melanjutkan inisialisasi
+        }
 
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override

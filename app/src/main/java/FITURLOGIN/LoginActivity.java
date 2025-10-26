@@ -1,7 +1,6 @@
 package FITURLOGIN;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -30,12 +29,16 @@ public class LoginActivity extends AppCompatActivity {
     TextInputEditText editTextUsername, editTextPassword;
     MaterialButton buttonLogin;
     ProgressBar progressBar;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
+
+        // Initialize session manager
+        sessionManager = new SessionManager(this);
 
         backArrow = findViewById(R.id.backArrowImageView);
         textFieldUsername = findViewById(R.id.textFieldUsername);
@@ -73,13 +76,8 @@ public class LoginActivity extends AppCompatActivity {
                     buttonLogin.setEnabled(true);
                     Toast.makeText(LoginActivity.this, "Login berhasil!", Toast.LENGTH_SHORT).show();
 
-                    // Simpan ke SharedPreferences
-                    SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean("isLoggedIn", true);
-                    editor.putString("accessToken", accessToken);
-                    editor.putString("userId", userId);
-                    editor.apply();
+                    // Simpan informasi login menggunakan SessionManager
+                    sessionManager.createLoginSession(accessToken, userId, email);
 
                     // Pindah ke dashboard
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
