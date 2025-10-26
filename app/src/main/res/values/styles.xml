@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BottomNavItemTextAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/bottom_nav_color_selector</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+</resources>
