@@ -8,5 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="hijau_muda_brand">#A5D6A7</color>
-    <color name="hijau_tua_brand">#388E3C</color>
+    <color name="hijau_tua_brand">#2E7D32</color>
+    <color name="hijau_nav_active">#E8F5E9</color>
+    <color name="hijau_nav_inactive">#9E9E9E</color>
 </resources>

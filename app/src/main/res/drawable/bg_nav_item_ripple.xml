@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#1A388E3C">
+    android:color="#40388E3C">
     <item android:id="@android:id/background">
         <selector>
             <item android:state_checked="true" android:drawable="@drawable/bg_nav_item_active" />

@@ -12,51 +12,34 @@
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/bottom_nav_height"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            android:layout_height="match_parent" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottom_app_bar"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/bottom_nav_height"
         android:layout_gravity="bottom"
-        app:backgroundTint="@android:color/transparent"
-        app:elevation="0dp"
-        android:paddingHorizontal="@dimen/bottom_nav_margin">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/bottom_nav_margin"
-            android:layout_marginBottom="@dimen/bottom_nav_margin"
-            android:background="@drawable/bg_bottom_nav_floating"
-            android:elevation="@dimen/bottom_nav_elevation"
-            android:paddingVertical="@dimen/nav_item_padding_vertical"
-            app:layout_anchor="@id/bottom_navigation">
-
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottom_navigation"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/bottom_nav_height"
-                android:layout_gravity="center"
-                android:background="@android:color/transparent"
-                app:elevation="0dp"
-                app:labelVisibilityMode="labeled"
-                app:menu="@menu/bottom_nav_menu"
-                app:itemBackground="@drawable/bg_nav_item_selector"
-                app:itemIconTint="@color/bottom_nav_color_selector"
-                app:itemTextColor="@color/bottom_nav_color_selector"
-                app:itemPaddingTop="@dimen/nav_item_padding_top"
-                app:itemPaddingBottom="@dimen/nav_item_padding_bottom" />
-
-        </FrameLayout>
-    </com.google.android.material.bottomappbar.BottomAppBar>
+        android:layout_marginBottom="24dp"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        app:elevation="8dp"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemBackground="@drawable/bg_nav_item_selector"
+        app:itemIconTint="@color/bottom_nav_color_selector"
+        app:itemTextColor="@color/bottom_nav_color_selector"
+        app:itemPaddingTop="@dimen/nav_item_padding_top"
+        app:itemPaddingBottom="@dimen/nav_item_padding_bottom"
+        app:itemTextAppearance="@style/BottomNavItemTextAppearance"
+        app:itemHorizontalTranslationEnabled="false" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

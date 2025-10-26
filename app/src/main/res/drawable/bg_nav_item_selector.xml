@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#1A388E3C">
+    android:color="#40388E3C">
     <item android:id="@android:id/background">
         <selector>
-            <item android:state_checked="true" android:drawable="@drawable/bg_nav_item_active" />
+            <item android:state_checked="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="#E8F5E9" />
+                    <corners android:radius="30dp" />
+                </shape>
+            </item>
             <item android:drawable="@android:color/transparent" />
         </selector>
     </item>
