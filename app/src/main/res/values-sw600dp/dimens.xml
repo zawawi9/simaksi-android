@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation bar for large screens -->
+    <dimen name="bottom_nav_height">72dp</dimen>
+    <dimen name="bottom_nav_margin">24dp</dimen>
+    <dimen name="bottom_nav_radius">36dp</dimen>
+    <dimen name="nav_item_radius">28dp</dimen>
+    <dimen name="nav_item_padding_vertical">10dp</dimen>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation bar -->
+    <dimen name="bottom_nav_height">64dp</dimen>
+    <dimen name="bottom_nav_margin">16dp</dimen>
+    <dimen name="bottom_nav_radius">32dp</dimen>
+    <dimen name="bottom_nav_elevation">8dp</dimen>
+    
+    <!-- Navigation item -->
+    <dimen name="nav_item_radius">24dp</dimen>
+    <dimen name="nav_item_padding_vertical">8dp</dimen>
+    <dimen name="nav_item_padding_top">8dp</dimen>
+    <dimen name="nav_item_padding_bottom">8dp</dimen>
+</resources>
