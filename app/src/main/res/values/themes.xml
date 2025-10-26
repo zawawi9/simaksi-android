@@ -20,11 +20,4 @@
         <item name="android:paddingBottom">12dp</item>
     </style>
 
-    <style name="App.BottomNavigationView.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="android:width">56dp</item>
-        <item name="android:height">56dp</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.Material3.SmallComponent</item>
-        <item name="android:color">#E6F0EA</item>
-    </style>
-
 </resources>

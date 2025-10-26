@@ -104,7 +104,6 @@ public class LoginActivity extends AppCompatActivity {
             return insets;
         });
     }
-
     private void showErrorDialog(String message) {
         new AlertDialog.Builder(this)
                 .setTitle("Gagal Login")
