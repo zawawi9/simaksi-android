@@ -10,5 +10,5 @@
     <dimen name="nav_item_radius">24dp</dimen>
     <dimen name="nav_item_padding_vertical">12dp</dimen>
     <dimen name="nav_item_padding_top">10dp</dimen>
-    <dimen name="nav_item_padding_bottom">10dp</dimen>
+    <dimen name="nav_item_padding_bottom">5dp</dimen>
 </resources>

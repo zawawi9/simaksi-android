@@ -3,9 +3,11 @@ package com.zawww.e_simaksi.api;
 import android.util.Log;
 
 import com.google.gson.JsonObject;
+import com.zawww.e_simaksi.model.Promosi; // <-- TAMBAHKAN IMPORT MODEL
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List; // <-- TAMBAHKAN IMPORT
 import java.util.Map;
 
 import retrofit2.Call;
@@ -14,7 +16,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
-import retrofit2.http.GET;
+import retrofit2.http.GET; // <-- TAMBAHKAN IMPORT
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Header;
@@ -31,6 +33,42 @@ public class SupabaseAuth {
 
     private static final AuthService authService = retrofit.create(AuthService.class);
     private static final ProfileService profileService = retrofit.create(ProfileService.class);
+
+    // ==========================================================
+    // ===== TAMBAHAN BARU UNTUK PROMOSI =====
+    // ==========================================================
+    private static final PromosiService promosiService = retrofit.create(PromosiService.class);
+
+    public static void getPromosiPoster(PromosiCallback callback) {
+        // Panggil service untuk mengambil data
+        promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
+            @Override
+            public void onResponse(Call<List<Promosi>> call, Response<List<Promosi>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d("SupabaseAuth", "✅ Berhasil mengambil data promosi: " + response.body().size() + " item.");
+                    callback.onSuccess(response.body());
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal mengambil promosi: " + errBody);
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError("Gagal mengambil promosi: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Promosi>> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi promosi: " + t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+    // ==========================================================
+    // ===== AKHIR TAMBAHAN BARU =====
+    // ==========================================================
+
 
     // ========== REGISTER ==========
     public static void registerUser(String email, String password, String namaLengkap, RegisterCallback callback) {
@@ -213,12 +251,28 @@ public class SupabaseAuth {
         @Headers({
                 "Content-Type: application/json",
                 "apikey: " + API_KEY,
-                "Authorization: Bearer " + API_KEY,
+                "Authorization: Bearer " + API_KEY, // Pakai Service Key (API_KEY)
                 "Prefer: return=representation"
         })
         @POST("rest/v1/profiles")
         Call<JsonObject> insertProfile(@Body Map<String, Object> body);
     }
+
+    // ==========================================================
+    // ===== INTERFACE BARU UNTUK PROMOSI =====
+    // ==========================================================
+    interface PromosiService {
+        @Headers({
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        // Ambil data dari 'promosi_poster', filter yg is_aktif=true, urutkan berdasarkan 'urutan'
+        @GET("rest/v1/promosi_poster?is_aktif=eq.true&order=urutan.asc")
+        Call<List<Promosi>> getPromosiAktif();
+    }
+    // ==========================================================
+    // ==========================================================
+
 
     // ========== CALLBACKS ==========
     public interface AuthCallback {
@@ -235,4 +289,14 @@ public class SupabaseAuth {
         void onSuccess(JsonObject userData);
         void onError(String errorMessage);
     }
+
+    // ==========================================================
+    // ===== CALLBACK BARU UNTUK PROMOSI =====
+    // ==========================================================
+    public interface PromosiCallback {
+        void onSuccess(List<Promosi> promosiList);
+        void onError(String errorMessage);
+    }
+    // ==========================================================
+    // ==========================================================
 }

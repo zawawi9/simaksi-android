@@ -1,6 +1,7 @@
 package dashboard;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +13,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.zawww.e_simaksi.R;
+import com.zawww.e_simaksi.api.SupabaseAuth;
+import com.zawww.e_simaksi.model.Promosi;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class HomeFragment extends Fragment {
 
-    // Komponen UI
+    // --- Konstanta untuk Logging ---
+    private static final String PROMO_DEBUG_TAG = "PROMO_DEBUG";
+
+    // --- Komponen UI ---
+    private ViewPager2 viewPager;
+    private PromosiSliderAdapter promosiSliderAdapter;
     private CardView cardJadwalKosong;
     private CardView cardJadwalAda;
     private TextView tvTanggalPendakian;
@@ -33,7 +46,12 @@ public class HomeFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Inisialisasi komponen UI
+        // --- Inisialisasi Slider Promosi ---
+        viewPager = view.findViewById(R.id.view_pager_promosi); // Pastikan ID ini ada di XML
+        promosiSliderAdapter = new PromosiSliderAdapter(new ArrayList<>(), getContext());
+        viewPager.setAdapter(promosiSliderAdapter);
+
+        // --- Inisialisasi Komponen Jadwal ---
         cardJadwalKosong = view.findViewById(R.id.card_jadwal_kosong);
         cardJadwalAda = view.findViewById(R.id.card_jadwal_ada);
         tvTanggalPendakian = view.findViewById(R.id.tv_tanggal_pendakian);
@@ -49,8 +67,9 @@ public class HomeFragment extends Fragment {
             return view;
         }
 
-        // Tampilkan kondisi default
+        // Tampilkan kondisi default & ambil data
         tampilkanJadwalKosong();
+        fetchPromosiData(); // Ambil data promosi dari Supabase
 
         // Untuk test UI jika ada data, aktifkan baris di bawah:
         // tampilkanJadwalAda("Sabtu, 11 Oktober 2025", "ESIMAKSI-ABC123XYZ", 5);
@@ -77,5 +96,40 @@ public class HomeFragment extends Fragment {
     private void tampilkanJadwalKosong() {
         cardJadwalAda.setVisibility(View.GONE);
         cardJadwalKosong.setVisibility(View.VISIBLE);
+    }
+
+    /** Mengambil data promosi dari Supabase untuk slider **/
+    private void fetchPromosiData() {
+        // 1. Log saat method dipanggil
+        Log.d(PROMO_DEBUG_TAG, "fetchPromosiData() dipanggil.");
+
+        SupabaseAuth.getPromosiPoster(new SupabaseAuth.PromosiCallback() {
+            @Override
+            public void onSuccess(List<Promosi> promosiList) {
+                // 2. Log jumlah data yang diterima
+                Log.d(PROMO_DEBUG_TAG, "onSuccess: Menerima " + promosiList.size() + " data promosi.");
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (!promosiList.isEmpty()) {
+                            promosiSliderAdapter.updateData(promosiList);
+                            viewPager.setVisibility(View.VISIBLE);
+                        } else {
+                            viewPager.setVisibility(View.GONE);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // 3. Log jika terjadi error
+                Log.e(PROMO_DEBUG_TAG, "onError: Gagal mengambil data - " + errorMessage);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() ->
+                            Toast.makeText(getContext(), "Gagal memuat promosi: " + errorMessage, Toast.LENGTH_LONG).show());
+                }
+            }
+        });
     }
 }

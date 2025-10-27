@@ -4,12 +4,19 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Toast;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
+import android.view.View;
+import android.view.ViewGroup; // <-- IMPORT YANG DITAMBAHKAN
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.core.view.WindowCompat;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -25,12 +32,13 @@ public class MainActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private SwipeRefreshLayout swipeRefreshLayout;
     private LottieAnimationView lottieRefreshAnimation;
+    private int previousPosition = 0; // Untuk melacak posisi navigasi sebelumnya
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_main);
-
         // Initialize session manager
         sessionManager = new SessionManager(this);
 
@@ -43,31 +51,90 @@ public class MainActivity extends AppCompatActivity {
                     .beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
                     .commit();
+            // Update previous position to match the default fragment (Beranda = position 0)
+            previousPosition = 0;
         }
 
         // Setup swipe to refresh with custom animation
         setupSwipeRefresh();
 
+        // ==========================================================
+        // ===== BAGIAN INI YANG DIPERBAIKI (DIGANTI TOTAL) =====
+        // ==========================================================
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            // Ambil layout params (aturan tata letak) dari view
+            ViewGroup.LayoutParams params = v.getLayoutParams();
+
+            // Pastikan itu adalah MarginLayoutParams (biar kita bisa set margin)
+            if (params instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) params;
+
+                // Set MARGIN BAWAH seukuran tinggi tombol navigasi
+                marginParams.bottomMargin = systemBars.bottom;
+
+                // Terapkan kembali layout params yang sudah diubah
+                v.setLayoutParams(marginParams);
+            }
+
+            // Kembalikan insets aslinya
+            return insets;
+        });
+        // ==========================================================
+        // ================= AKHIR PERBAIKAN =======================
+        // ==========================================================
+
+
         // Listener untuk navigasi
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
+            int currentPosition = getPositionById(itemId);
 
+            // Tentukan arah animasi berdasarkan posisi sebelumnya dan sekarang
+            int enterAnim, exitAnim, popEnterAnim, popExitAnim;
+
+            if (currentPosition > previousPosition) {
+                // Berpindah ke kanan (misal: Beranda -> Transaksi)
+                enterAnim = R.anim.slide_in_right;
+                exitAnim = R.anim.slide_out_left;
+                popEnterAnim = R.anim.slide_in_left;
+                popExitAnim = R.anim.slide_out_right;
+            } else if (currentPosition < previousPosition) {
+                // Berpindah ke kiri (misal: Transaksi -> Beranda)
+                enterAnim = R.anim.slide_in_left;
+                exitAnim = R.anim.slide_out_right;
+                popEnterAnim = R.anim.slide_in_right;
+                popExitAnim = R.anim.slide_out_left;
+            } else {
+                // Jika sama atau tidak ada perubahan posisi, gunakan default
+                enterAnim = R.anim.slide_in_right;
+                exitAnim = R.anim.slide_out_left;
+                popEnterAnim = R.anim.slide_in_left;
+                popExitAnim = R.anim.slide_out_right;
+            }
+
+            // Update posisi sebelumnya
+            previousPosition = currentPosition;
+
+            Fragment selectedFragment = null;
             if (itemId == R.id.nav_beranda) {
-                loadFragment(new HomeFragment());
-                return true; // Berhasil, item dipilih
+                selectedFragment = new HomeFragment();
             } else if (itemId == R.id.nav_transaksi) {
-                loadFragment(new TransaksiFragment());
-                return true; // Berhasil, item dipilih
+                selectedFragment = new TransaksiFragment();
             } else if (itemId == R.id.nav_hubungi) {
-                Toast.makeText(this, "Fitur Hubungi Kami akan segera hadir!", Toast.LENGTH_SHORT).show();
-                return false; // Gagal, item tidak akan dipilih (highlight)
+                selectedFragment = new HubungiKamiFragment();
             } else if (itemId == R.id.nav_profil) {
                 // Tambahkan fungsi logout di sini atau navigasi ke profil
                 showLogoutDialog();
                 return true; // Berhasil, item dipilih
             }
 
-            return false;
+            if (selectedFragment != null) {
+                loadFragmentWithDirection(selectedFragment, enterAnim, exitAnim, popEnterAnim, popExitAnim);
+            }
+
+            return true; // Berhasil, item dipilih
         });
 
         // PERBAIKAN PALING PENTING:
@@ -75,50 +142,59 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             bottomNavigationView.setSelectedItemId(R.id.nav_beranda);
         }
+
+        // Setup back pressed callback for double tap to exit
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (backPressedTime + 2000 > System.currentTimeMillis()) {
+                    finish(); // Keluar dari aplikasi
+                } else {
+                    Toast.makeText(getBaseContext(), "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                }
+                backPressedTime = System.currentTimeMillis();
+            }
+        });
     }
-    
+
     private void setupSwipeRefresh() {
         // Setup custom refresh animation
         swipeRefreshLayout.setOnRefreshListener(() -> {
             // Show custom refresh animation
             showCustomRefreshAnimation();
-            
+
             // Simulate data refresh (replace with actual data refresh logic)
             new Handler().postDelayed(() -> {
                 // Stop the refresh animation
                 swipeRefreshLayout.setRefreshing(false);
-                
+
                 // Optional: Show success message
                 Toast.makeText(this, "Data diperbarui", Toast.LENGTH_SHORT).show();
             }, 2000); // Simulate 2 seconds refresh time
         });
-        
+
         // Customize the default SwipeRefreshLayout colors
         swipeRefreshLayout.setColorSchemeColors(
-            getResources().getColor(R.color.hijau_tua_brand)
+                getResources().getColor(R.color.hijau_tua_brand)
         );
     }
-    
+
     private void showCustomRefreshAnimation() {
         // The Lottie animation will automatically play when setRefreshing(true) is called
         // The default animation will be replaced with our custom one
     }
-    
-    private void loadFragment(Fragment fragment) {
+
+    // Metode untuk memuat fragment dengan animasi arah yang sesuai
+    private void loadFragmentWithDirection(Fragment fragment, int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        // Improved animations for smoother transitions
-        fragmentTransaction.setCustomAnimations(
-                R.anim.slide_in_right,
-                R.anim.slide_out_left,
-                R.anim.slide_in_left,
-                R.anim.slide_out_right
-        );
+        // Set animasi berdasarkan arah navigasi
+        fragmentTransaction.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim);
         fragmentTransaction.replace(R.id.fragment_container, fragment);
         fragmentTransaction.commit();
     }
-    
+
     private void showLogoutDialog() {
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Logout")
@@ -127,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                     // Logout user
                     sessionManager.logoutUser();
                     Toast.makeText(this, "Berhasil logout", Toast.LENGTH_SHORT).show();
-                    
+
                     // Kembali ke halaman login
                     Intent intent = new Intent(MainActivity.this, TampilanPertamaActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -137,16 +213,19 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
                 .show();
     }
-    
-    // Handle back button press to exit app or return to home
-    @Override
-    public void onBackPressed() {
-        if (backPressedTime + 2000 > System.currentTimeMillis()) {
-            super.onBackPressed();
-            return;
+
+    // Metode untuk mendapatkan posisi navigasi berdasarkan ID
+    private int getPositionById(int itemId) {
+        if (itemId == R.id.nav_beranda) {
+            return 0; // Beranda adalah posisi pertama (paling kiri)
+        } else if (itemId == R.id.nav_transaksi) {
+            return 1; // Transaksi adalah posisi kedua
+        } else if (itemId == R.id.nav_hubungi) {
+            return 2; // Hubungi adalah posisi ketiga
+        } else if (itemId == R.id.nav_profil) {
+            return 3; // Profil adalah posisi keempat (paling kanan)
         } else {
-            Toast.makeText(getBaseContext(), "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+            return 0;
         }
-        backPressedTime = System.currentTimeMillis();
     }
 }
