@@ -8,7 +8,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.graphics.Insets;
 import android.view.View;
-import android.view.ViewGroup; // <-- IMPORT YANG DITAMBAHKAN
+import android.view.ViewGroup;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -58,9 +58,6 @@ public class MainActivity extends AppCompatActivity {
         // Setup swipe to refresh with custom animation
         setupSwipeRefresh();
 
-        // ==========================================================
-        // ===== BAGIAN INI YANG DIPERBAIKI (DIGANTI TOTAL) =====
-        // ==========================================================
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
@@ -81,10 +78,6 @@ public class MainActivity extends AppCompatActivity {
             // Kembalikan insets aslinya
             return insets;
         });
-        // ==========================================================
-        // ================= AKHIR PERBAIKAN =======================
-        // ==========================================================
-
 
         // Listener untuk navigasi
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -227,5 +220,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             return 0;
         }
+    }
+    public SwipeRefreshLayout getSwipeRefreshLayout() {
+        return swipeRefreshLayout;
     }
 }

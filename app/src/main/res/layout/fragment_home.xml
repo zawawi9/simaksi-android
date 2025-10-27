@@ -47,6 +47,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/icon_cart"
         app:layout_constraintEnd_toStartOf="@+id/icon_cart"
         app:layout_constraintTop_toTopOf="@+id/icon_cart" />
+    <!-- ... (Akhir kode header) ... -->
+
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="0dp"
@@ -69,18 +71,16 @@
                 android:layout_height="140dp"
                 android:layout_marginTop="16dp" />
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tab_layout_indicator"
+            <LinearLayout
+                android:id="@+id/layout_dots_indicator"
                 android:layout_width="wrap_content"
-                android:layout_height="12dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
-                android:background="@android:color/transparent"
-                app:tabBackground="@drawable/tab_pager_selector"
-                app:tabGravity="center"
-                app:tabIndicatorHeight="0dp"
-                app:tabRippleColor="@null" />
+                android:orientation="horizontal"
+                />
 
+            <!-- Menu Utama -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -97,6 +97,7 @@
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
+                <!-- Menu Items -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -185,6 +186,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
+                <!-- Jika belum ada jadwal -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_jadwal_kosong"
                     android:layout_width="match_parent"
@@ -202,6 +204,7 @@
                         android:textSize="16sp" />
                 </androidx.cardview.widget.CardView>
 
+                <!-- Jika sudah ada jadwal -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_jadwal_ada"
                     android:layout_width="match_parent"

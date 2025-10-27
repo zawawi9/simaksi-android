@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.zawww.e_simaksi.R;
+import com.zawww.e_simaksi.R; // Ganti R
 import com.zawww.e_simaksi.model.Promosi; // Ganti model
 
 import java.util.List;
@@ -38,8 +38,8 @@ public class PromosiSliderAdapter extends RecyclerView.Adapter<PromosiSliderAdap
         // Pakai Glide untuk memuat gambar dari URL ke ImageView
         Glide.with(context)
                 .load(promosi.getUrlGambar())
-                .placeholder(R.drawable.placeholder_loading) // Buat gambar placeholder
-                .error(R.drawable.placeholder_error) // Buat gambar error
+                // .placeholder(R.drawable.placeholder_loading) // Aktifkan jika sudah punya
+                // .error(R.drawable.placeholder_error)       // Aktifkan jika sudah punya
                 .into(holder.imageViewPoster);
     }
 
@@ -48,11 +48,16 @@ public class PromosiSliderAdapter extends RecyclerView.Adapter<PromosiSliderAdap
         return promosiList.size();
     }
 
+    // ===============================================
+    // ===== METHOD BARU UNTUK UPDATE DATA =====
+    // ===============================================
     public void updateData(List<Promosi> newList) {
         this.promosiList.clear();
         this.promosiList.addAll(newList);
-        notifyDataSetChanged();
+        notifyDataSetChanged(); // Memberi tahu adapter bahwa data berubah
     }
+    // ===============================================
+
 
     class SliderViewHolder extends RecyclerView.ViewHolder {
         ImageView imageViewPoster;
