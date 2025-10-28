@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.zawww.e_simaksi.model.Promosi;
+import com.zawww.e_simaksi.model.Reservasi;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +20,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Header;
+import retrofit2.http.Query;
 
 public class SupabaseAuth {
 
@@ -32,7 +35,7 @@ public class SupabaseAuth {
     private static final AuthService authService = retrofit.create(AuthService.class);
     private static final ProfileService profileService = retrofit.create(ProfileService.class);
     private static final PromosiService promosiService = retrofit.create(PromosiService.class);
-
+    private static final ReservasiService reservasiService = retrofit.create(ReservasiService.class);
     public static void getPromosiPoster(PromosiCallback callback) {
         // Panggil service untuk mengambil data
         promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
@@ -185,7 +188,6 @@ public class SupabaseAuth {
         });
     }
 
-    // ========== CEK STATUS USER ==========
     private static void getUserInfo(String accessToken, UserInfoCallback callback) {
         Retrofit retrofitUser = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -206,6 +208,69 @@ public class SupabaseAuth {
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
+    public static void getJadwalAktif(String idPengguna, JadwalCallback callback) {
+        String idQuery = "eq." + idPengguna;
+        String statusQuery = "eq.terkonfirmasi"; // Hanya ambil yang sudah terkonfirmasi
+        // Ambil data ringkas saja
+        String querySelect = "id_reservasi,tanggal_pendakian,kode_reservasi,jumlah_pendaki";
+
+        reservasiService.getJadwalAktif(idQuery, statusQuery, querySelect, "tanggal_pendakian.asc", 1)
+                .enqueue(new Callback<List<Reservasi>>() {
+                    @Override
+                    public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
+                        if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                            Log.d("SupabaseAuth", "✅ Berhasil mengambil jadwal aktif.");
+                            callback.onSuccess(response.body().get(0)); // Kirim data jadwal pertama
+                        } else {
+                            // Ini bukan error, tapi memang tidak ada jadwal
+                            if (response.isSuccessful()) {
+                                Log.d("SupabaseAuth", "Tidak ada jadwal aktif ditemukan.");
+                                callback.onError("Tidak ada jadwal aktif.");
+                            } else {
+                                // Ini baru error server
+                                callback.onError("Gagal mengambil jadwal: " + response.message());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Reservasi>> call, Throwable t) {
+                        Log.e("SupabaseAuth", "⚠️ Error koneksi jadwal: " + t.getMessage());
+                        callback.onError("Koneksi gagal: " + t.getMessage());
+                    }
+                });
+    }
+
+    public static void getDetailReservasi(int idReservasi, DetailReservasiCallback callback) {
+        String idQuery = "eq." + idReservasi;
+
+        String querySelect = "*,pendaki_rombongan(*),barang_bawaan_sampah(*)";
+
+        reservasiService.getDetailReservasi(idQuery, querySelect).enqueue(new Callback<List<Reservasi>>() {
+            @Override
+            public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    Log.d("SupabaseAuth", "✅ Berhasil mengambil detail reservasi.");
+                    callback.onSuccess(response.body().get(0)); // Kirim data reservasi pertama
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal mengambil detail reservasi: " + errBody);
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError("Gagal mengambil data: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Reservasi>> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi detail reservasi: " + t.getMessage());
                 callback.onError("Koneksi gagal: " + t.getMessage());
             }
         });
@@ -257,6 +322,31 @@ public class SupabaseAuth {
         @GET("rest/v1/promosi_poster?is_aktif=eq.true&order=urutan.asc")
         Call<List<Promosi>> getPromosiAktif();
     }
+
+    interface ReservasiService {
+        @Headers({
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @GET("rest/v1/reservasi")
+        Call<List<Reservasi>> getDetailReservasi(
+                @Query("id_reservasi") String idQuery, // eg: "eq.1"
+                @Query("select") String select
+        );
+        @Headers({
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @GET("rest/v1/reservasi")
+        Call<List<Reservasi>> getJadwalAktif(
+                @Query("id_pengguna") String idPenggunaQuery,
+                @Query("status") String statusQuery,     // eq.terkonfirmasi
+                @Query("select") String select,          // id_reservasi,tanggal_pendakian,dll
+                @Query("order") String order,
+                @Query("limit") int limit
+        );
+    }
+
     // ========== CALLBACKS ==========
     public interface AuthCallback {
         void onSuccess(String accessToken, String userId);
@@ -275,6 +365,16 @@ public class SupabaseAuth {
 
     public interface PromosiCallback {
         void onSuccess(List<Promosi> promosiList);
+        void onError(String errorMessage);
+    }
+
+    public interface JadwalCallback {
+        void onSuccess(Reservasi jadwal);
+        void onError(String errorMessage);
+    }
+
+    public interface DetailReservasiCallback {
+        void onSuccess(Reservasi reservasi);
         void onError(String errorMessage);
     }
 }

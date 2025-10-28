@@ -260,17 +260,36 @@
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:padding="32dp"
-                        android:text="Belum ada pendakian, Silahkan Pesan Ticket untuk pendakian anda!"
-                        android:textColor="#555555"
-                        android:textSize="16sp" />
+                        android:orientation="vertical"
+                        android:padding="32dp">
+                        <ImageView
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:alpha="0.5"
+                            android:src="@drawable/ic_calendar_empty" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="Belum Ada Pendakian"
+                            android:textColor="@color/black"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Pesan tiket untuk melihat jadwal pendakian Anda di sini!"
+                            android:textAlignment="center"
+                            android:textColor="#555555"
+                            android:textSize="14sp" />
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Jika sudah ada jadwal -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_jadwal_ada"
                     android:layout_width="match_parent"
@@ -278,51 +297,60 @@
                     android:visibility="gone"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp">
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/bg_jadwal_card"
+                        android:gravity="center_vertical"
                         android:orientation="vertical"
                         android:padding="16dp">
-
                         <TextView
                             android:id="@+id/tv_tanggal_pendakian"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tanggal: -"
-                            android:textColor="@color/black"
-                            android:textSize="16sp"
+                            android:text="2025-10-31"
+                            android:textColor="@android:color/white"
+                            android:textSize="24sp"
                             android:textStyle="bold" />
-
                         <TextView
                             android:id="@+id/tv_kode_booking"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Kode Booking: -"
-                            android:textColor="#444"
+                            android:alpha="0.8"
+                            android:text="R20251028A2AF83"
+                            android:textColor="@android:color/white"
                             android:textSize="14sp" />
-
                         <TextView
                             android:id="@+id/tv_jumlah_pendaki"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Jumlah Pendaki: -"
-                            android:textColor="#444"
+                            android:layout_marginTop="2dp"
+                            android:alpha="0.8"
+                            android:text="1 Orang"
+                            android:textColor="@android:color/white"
                             android:textSize="14sp" />
+                        <Space
+                            android:layout_width="match_parent"
+                            android:layout_height="16dp" />
                         <Button
                             android:id="@+id/btn_lihat_detail"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:backgroundTint="@color/teal_200"
+                            android:background="@drawable/bg_button_jadwal_white"
+                            app:backgroundTint="@null"
                             android:text="Lihat Detail"
-                            android:textColor="@color/white"
-                            android:textAllCaps="false" />
+                            android:textAllCaps="false"
+                            android:textColor="#004D40"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </FrameLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
