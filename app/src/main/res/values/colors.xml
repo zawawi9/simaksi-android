@@ -11,4 +11,8 @@
     <color name="hijau_tua_brand">#2E7D32</color>
     <color name="hijau_nav_active">#E8F5E9</color>
     <color name="hijau_nav_inactive">#9E9E9E</color>
+    <color name="menu_card_blue">#E6F0FF</color>
+    <color name="menu_card_green">#E8F5E9</color>
+    <color name="menu_card_yellow">#FFF8E1</color>
+    <color name="menu_card_purple">#F3E5F5</color>
 </resources>

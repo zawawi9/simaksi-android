@@ -3,20 +3,18 @@ package com.zawww.e_simaksi.api;
 import android.util.Log;
 
 import com.google.gson.JsonObject;
-import com.zawww.e_simaksi.model.Promosi; // <-- TAMBAHKAN IMPORT MODEL
-
+import com.zawww.e_simaksi.model.Promosi;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List; // <-- TAMBAHKAN IMPORT
+import java.util.List;
 import java.util.Map;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
-import retrofit2.http.GET; // <-- TAMBAHKAN IMPORT
+import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Header;
@@ -33,10 +31,6 @@ public class SupabaseAuth {
 
     private static final AuthService authService = retrofit.create(AuthService.class);
     private static final ProfileService profileService = retrofit.create(ProfileService.class);
-
-    // ==========================================================
-    // ===== TAMBAHAN BARU UNTUK PROMOSI =====
-    // ==========================================================
     private static final PromosiService promosiService = retrofit.create(PromosiService.class);
 
     public static void getPromosiPoster(PromosiCallback callback) {
@@ -65,10 +59,6 @@ public class SupabaseAuth {
             }
         });
     }
-    // ==========================================================
-    // ===== AKHIR TAMBAHAN BARU =====
-    // ==========================================================
-
 
     // ========== REGISTER ==========
     public static void registerUser(String email, String password, String namaLengkap, RegisterCallback callback) {
@@ -258,9 +248,6 @@ public class SupabaseAuth {
         Call<JsonObject> insertProfile(@Body Map<String, Object> body);
     }
 
-    // ==========================================================
-    // ===== INTERFACE BARU UNTUK PROMOSI =====
-    // ==========================================================
     interface PromosiService {
         @Headers({
                 "apikey: " + API_KEY,
@@ -270,10 +257,6 @@ public class SupabaseAuth {
         @GET("rest/v1/promosi_poster?is_aktif=eq.true&order=urutan.asc")
         Call<List<Promosi>> getPromosiAktif();
     }
-    // ==========================================================
-    // ==========================================================
-
-
     // ========== CALLBACKS ==========
     public interface AuthCallback {
         void onSuccess(String accessToken, String userId);
@@ -290,13 +273,8 @@ public class SupabaseAuth {
         void onError(String errorMessage);
     }
 
-    // ==========================================================
-    // ===== CALLBACK BARU UNTUK PROMOSI =====
-    // ==========================================================
     public interface PromosiCallback {
         void onSuccess(List<Promosi> promosiList);
         void onError(String errorMessage);
     }
-    // ==========================================================
-    // ==========================================================
 }
