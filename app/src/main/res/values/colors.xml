@@ -15,4 +15,5 @@
     <color name="menu_card_green">#E8F5E9</color>
     <color name="menu_card_yellow">#FFF8E1</color>
     <color name="menu_card_purple">#F3E5F5</color>
+    <color name="menu_card_red">#FFEBEE</color>
 </resources>

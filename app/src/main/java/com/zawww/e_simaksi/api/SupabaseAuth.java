@@ -35,7 +35,7 @@ public class SupabaseAuth {
     private static final AuthService authService = retrofit.create(AuthService.class);
     private static final ProfileService profileService = retrofit.create(ProfileService.class);
     private static final PromosiService promosiService = retrofit.create(PromosiService.class);
-    private static final ReservasiService reservasiService = retrofit.create(ReservasiService.class);
+    public static final ReservasiService reservasiService = retrofit.create(ReservasiService.class);
     public static void getPromosiPoster(PromosiCallback callback) {
         // Panggil service untuk mengambil data
         promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
@@ -323,7 +323,7 @@ public class SupabaseAuth {
         Call<List<Promosi>> getPromosiAktif();
     }
 
-    interface ReservasiService {
+    public interface ReservasiService {
         @Headers({
                 "apikey: " + API_KEY,
                 "Authorization: Bearer " + API_KEY
@@ -344,6 +344,16 @@ public class SupabaseAuth {
                 @Query("select") String select,          // id_reservasi,tanggal_pendakian,dll
                 @Query("order") String order,
                 @Query("limit") int limit
+        );
+        @Headers({
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @GET("rest/v1/reservasi")
+        Call<List<Reservasi>> getReservasiByUser(
+                @Query("id_pengguna") String idPenggunaQuery, // eg: "eq.user-id-here"
+                @Query("select") String select,               // specify fields to return
+                @Query("order") String order                  // order by field, default ascending
         );
     }
 
@@ -376,5 +386,41 @@ public class SupabaseAuth {
     public interface DetailReservasiCallback {
         void onSuccess(Reservasi reservasi);
         void onError(String errorMessage);
+    }
+
+    public interface ReservasiCallback {
+        void onSuccess(List<Reservasi> reservasiList);
+        void onError(String errorMessage);
+    }
+
+    public static void getReservasiHistory(String idPengguna, ReservasiCallback callback) {
+        String idQuery = "eq." + idPengguna;
+        String selectQuery = "*"; // Ambil semua data
+        String orderQuery = "dipesan_pada.desc"; // Urutkan dari yang terbaru
+
+        reservasiService.getReservasiByUser(idQuery, selectQuery, orderQuery)
+                .enqueue(new Callback<List<Reservasi>>() {
+                    @Override
+                    public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            Log.d("SupabaseAuth", "✅ Berhasil mengambil riwayat reservasi: " + response.body().size() + " item.");
+                            callback.onSuccess(response.body());
+                        } else {
+                            try {
+                                String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                                Log.e("SupabaseAuth", "Gagal mengambil riwayat reservasi: " + errBody);
+                            } catch (java.io.IOException e) {
+                                Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                            }
+                            callback.onError("Gagal mengambil riwayat: " + response.message());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Reservasi>> call, Throwable t) {
+                        Log.e("SupabaseAuth", "⚠️ Error koneksi riwayat reservasi: " + t.getMessage());
+                        callback.onError("Koneksi gagal: " + t.getMessage());
+                    }
+                });
     }
 }

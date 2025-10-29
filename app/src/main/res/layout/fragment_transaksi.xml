@@ -1,13 +1,203 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F5F5F5"
     tools:context="dashboard.TransaksiFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+    <!-- Header Section -->
+    <ImageView
+        android:id="@+id/header_background"
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/header_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</FrameLayout>
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_arrow_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@android:color/white" />
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/img_1"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_back"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btn_back" />
+
+    <!-- Filter Section -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/filter_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="-40dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/header_background">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Riwayat Transaksi"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Filter hasil pencarian Anda"
+                android:layout_marginBottom="8dp"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_semua"
+                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Semua"
+                        android:checked="true" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_berhasil"
+                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Berhasil" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_menunggu"
+                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Menunggu" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_gagal"
+                        style="@style/Widget.MaterialComponents.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gagal" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_tgl_mulai"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tgl Mulai"
+                    app:icon="@drawable/ic_calendar" />
+
+                <Space
+                    android:layout_width="16dp"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_tgl_akhir"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tgl Akhir"
+                    app:icon="@drawable/ic_calendar" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_transaksi"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@+id/filter_card"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Empty State -->
+    <LinearLayout
+        android:id="@+id/layout_empty_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/filter_card"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:alpha="0.5"
+            android:src="@drawable/ic_receipt_empty" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Tidak Ada Transaksi"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="Transaksi yang cocok dengan filter Anda akan muncul di sini."
+            android:textColor="#555555"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
