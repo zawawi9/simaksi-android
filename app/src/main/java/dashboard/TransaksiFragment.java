@@ -67,7 +67,6 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         super.onViewCreated(view, savedInstanceState);
 
         // Initialize Views
-        ImageButton btnBack = view.findViewById(R.id.btn_back);
         recyclerView = view.findViewById(R.id.recycler_transaksi);
         emptyStateLayout = view.findViewById(R.id.layout_empty_state);
         chipGroupStatus = view.findViewById(R.id.chip_group_status);
@@ -75,19 +74,11 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         btnTglAkhir = view.findViewById(R.id.btn_tgl_akhir);
         sessionManager = new SessionManager(requireContext());
 
-        setupNavigation(btnBack);
         setupRecyclerView();
         setupFilters();
         loadTransaksiData();
     }
 
-    private void setupNavigation(ImageButton btnBack) {
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().onBackPressed();
-            }
-        });
-    }
 
     private void setupRecyclerView() {
         adapter = new TransaksiAdapter(new ArrayList<>(), this);
