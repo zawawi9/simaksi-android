@@ -136,16 +136,31 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.setSelectedItemId(R.id.nav_beranda);
         }
 
-        // Setup back pressed callback for double tap to exit
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (backPressedTime + 2000 > System.currentTimeMillis()) {
-                    finish(); // Keluar dari aplikasi
+                // Dapatkan fragment container utama
+                FragmentManager supportFm = getSupportFragmentManager();
+                Fragment currentFragment = supportFm.findFragmentById(R.id.fragment_container);
+                if (currentFragment instanceof ReservasiFragment &&
+                        currentFragment.getChildFragmentManager().getBackStackEntryCount() > 0) {
+
+                    // JANGAN keluar. Biarkan ReservasiFragment menangani tombol kembali
+                    currentFragment.getChildFragmentManager().popBackStack();
+
+                } else if (supportFm.getBackStackEntryCount() > 0) {
+                    // Jika ini fragment lain (bukan Home), kembali ke Home
+                    supportFm.popBackStack();
+
                 } else {
-                    Toast.makeText(getBaseContext(), "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                    // Jika kita sudah di Home, baru jalankan logic keluar aplikasi
+                    if (backPressedTime + 2000 > System.currentTimeMillis()) {
+                        finish(); // Keluar dari aplikasi
+                    } else {
+                        Toast.makeText(getBaseContext(), "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                    }
+                    backPressedTime = System.currentTimeMillis();
                 }
-                backPressedTime = System.currentTimeMillis();
             }
         });
     }
@@ -205,6 +220,12 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    public void showBottomNav(boolean show) {
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
     }
 
     // Metode untuk mendapatkan posisi navigasi berdasarkan ID
