@@ -7,5 +7,37 @@
     <string name="supabase_url">YOUR_SUPABASE_PROJECT_URL_HERE</string>
     <string name="supabase_anon_key">YOUR_SUPABASE_ANON_KEY_HERE</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="kembali">Kembali</string>
+    <string name="lanjut">Lanjut</string>
+    <string name="buat_reservasi">Buat Reservasi</string>
+
+    <string name="reservasi_judul">Buat Reservasi Baru</string>
+
+    <string name="reservasi_langkah1_judul">Langkah 1: Cek Ketersediaan Kuota</string>
+    <string name="reservasi_tanggal_masuk_hint">Tanggal Masuk (H-7)</string>
+    <string name="reservasi_tanggal_keluar_hint">Tanggal Keluar</string>
+    <string name="reservasi_jumlah_pendaki_hint">Jumlah Pendaki (Maks 10)</string>
+    <string name="reservasi_status_kuota_default">Silakan isi data untuk mengecek kuota.</string>
+
+    <string name="reservasi_langkah2_judul">Langkah 2: Data Rombongan</string>
+    <string name="reservasi_ketua_rombongan">Ketua Rombongan</string>
+    <string name="reservasi_nama_ketua_hint">Nama Lengkap Ketua</string>
+    <string name="reservasi_nik_ketua_hint">NIK Ketua</string>
+    <string name="reservasi_telp_ketua_hint">No. Telepon Ketua</string>
+    <string name="item_pendaki_pilih_surat">Pilih Surat Sehat (PDF/JPG)</string>
+    <string name="item_pendaki_file_belum_dipilih">Belum ada file dipilih.</string>
+    <string name="reservasi_langkah3_judul">Langkah 3: Barang Bawaan (Sampah)</string>
+    <string name="reservasi_tambah_barang">Tambah Barang Bawaan</string>
+    <string name="reservasi_ringkasan_biaya">Ringkasan Biaya</string>
+    <string name="reservasi_memuat">Memuat...</string>
+    <string name="reservasi_total">Total: Rp 0</string>
+    <string name="item_pendaki_judul_prefix">Data Anggota</string> <string name="item_pendaki_nama_hint">Nama Lengkap Anggota</string>
+    <string name="item_pendaki_nik_hint">NIK Anggota</string>
+    <string name="item_pendaki_telp_hint">No. Telepon Anggota</string>
+    <string name="item_barang_nama_hint">Nama Barang</string>
+    <string name="item_barang_jumlah_hint">Jumlah</string>
+    <string name="item_barang_jenis_hint">Jenis Sampah</string>
+    <string name="hapus_barang_content_desc">Hapus barang</string>
+    <string name="item_pendaki_darurat_hint">Kontak Darurat</string>
+    <string name="item_pendaki_alamat_hint">Alamat</string>
 </resources>

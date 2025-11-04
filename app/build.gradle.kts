@@ -72,4 +72,13 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+// WAJIB: Untuk LiveData (MutableLiveData)
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
+// WAJIB: Untuk Fragment (Fragment, getChildFragmentManager)
+// (Meskipun Anda punya .activity, ini lebih eksplisit untuk Fragment)
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
+// UNTUK UPLOAD FILE: Diperlukan oleh SupabaseAuth
+// Retrofit tidak menyertakannya secara default
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 }

@@ -31,6 +31,7 @@ import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
 import FITURLOGIN.SessionManager;
+import dashboard.ReservasiFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +62,6 @@ public class HomeFragment extends Fragment {
     // --- State ---
     private long idReservasiAktif = -1L;
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -84,6 +84,19 @@ public class HomeFragment extends Fragment {
         tvKodeBooking = view.findViewById(R.id.tv_kode_booking);
         tvJumlahPendaki = view.findViewById(R.id.tv_jumlah_pendaki);
         btnLihatDetail = view.findViewById(R.id.btn_lihat_detail);
+        CardView cardPesanTiket = view.findViewById(R.id.card_pesan_tiket);
+
+        cardPesanTiket.setOnClickListener(v -> {
+
+            // 3. Buat instance Fragment reservasi
+            ReservasiFragment reservasiFragment = new ReservasiFragment();
+
+            // 4. Lakukan Fragment Transaction
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.main, reservasiFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         // --- Setup Adapter Slider ---
         promosiSliderAdapter = new PromosiSliderAdapter(new ArrayList<>(), getContext());

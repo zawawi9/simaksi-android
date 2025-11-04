@@ -1,12 +1,17 @@
 package com.zawww.e_simaksi.api;
 
+import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import com.google.gson.JsonObject;
+import com.zawww.e_simaksi.model.BuatReservasiRequest;
+import com.zawww.e_simaksi.model.KuotaHarian;
 import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +25,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Header;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public class SupabaseAuth {
@@ -36,6 +42,8 @@ public class SupabaseAuth {
     private static final ProfileService profileService = retrofit.create(ProfileService.class);
     private static final PromosiService promosiService = retrofit.create(PromosiService.class);
     public static final ReservasiService reservasiService = retrofit.create(ReservasiService.class);
+    private static final KuotaService kuotaService = retrofit.create(KuotaService.class);
+    private static final StorageService storageService = retrofit.create(StorageService.class);
     public static void getPromosiPoster(PromosiCallback callback) {
         // Panggil service untuk mengambil data
         promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
@@ -275,7 +283,103 @@ public class SupabaseAuth {
             }
         });
     }
+    public static void cekKuota(String tanggal, KuotaCallback callback) {
+        String tanggalQuery = "eq." + tanggal;
+        kuotaService.getKuota(tanggalQuery).enqueue(new Callback<List<KuotaHarian>>() {
+            @Override
+            public void onResponse(Call<List<KuotaHarian>> call, Response<List<KuotaHarian>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (response.body().isEmpty()) {
+                        // Tidak ada kuota = kuota 0
+                        callback.onError("Kuota untuk tanggal ini belum dibuka.");
+                    } else {
+                        // Kuota ditemukan
+                        callback.onSuccess(response.body().get(0));
+                    }
+                } else {
+                    callback.onError("Gagal cek kuota: " + response.message());
+                }
+            }
+            @Override
+            public void onFailure(Call<List<KuotaHarian>> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+    public static void uploadSuratSehat(Context context, String accessToken, Uri fileUri, String fileName, UploadCallback callback) {
+        try {
+            InputStream inputStream = context.getContentResolver().openInputStream(fileUri);
+            byte[] fileBytes = new byte[inputStream.available()];
+            inputStream.read(fileBytes);
+            inputStream.close();
 
+            String mimeType = context.getContentResolver().getType(fileUri);
+            if (mimeType == null) {
+                mimeType = "application/octet-stream";
+            }
+
+            okhttp3.RequestBody requestFile = okhttp3.RequestBody.create(
+                    okhttp3.MediaType.parse(mimeType),
+                    fileBytes
+            );
+
+            // BUAT Bearer token yang benar
+            String bearerToken = "Bearer " + accessToken;
+
+            // Panggil service storage DENGAN bearerToken
+            storageService.uploadFile(bearerToken, fileName, requestFile).enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    if (response.isSuccessful()) {
+                        String publicUrl = BASE_URL + "storage/v1/object/public/surat-sehat/" + fileName;
+                        Log.d("SupabaseAuth", "✅ File terupload: " + publicUrl);
+                        callback.onSuccess(publicUrl);
+                    } else {
+                        try {
+                            String err = response.errorBody() != null ? response.errorBody().string() : "null";
+                            Log.e("SupabaseAuth", "❌ Gagal upload: " + err);
+                            callback.onError("Gagal upload file: " + response.message());
+                        } catch (IOException e) {
+                            callback.onError("Gagal upload file: " + e.getMessage());
+                        }
+                    }
+                }
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.e("SupabaseAuth", "⚠️ Gagal koneksi upload: " + t.getMessage());
+                    callback.onError("Koneksi upload gagal: " + t.getMessage());
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e("SupabaseAuth", "Error membaca file: " + e.getMessage());
+            callback.onError("Gagal membaca file: " + e.getMessage());
+        }
+    }
+    public static void kirimReservasi(BuatReservasiRequest requestBody, GeneralCallback callback) {
+        reservasiService.buatReservasi(requestBody).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("SupabaseAuth", "✅ Reservasi berhasil dibuat!");
+                    callback.onSuccess();
+                } else {
+                    try {
+                        String err = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "❌ Gagal buat reservasi: " + err);
+                        callback.onError("Gagal membuat reservasi: " + response.message());
+                    } catch (IOException e) {
+                        callback.onError("Gagal membuat reservasi: " + e.getMessage());
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Gagal koneksi RPC: " + t.getMessage());
+                callback.onError("Koneksi RPC gagal: " + t.getMessage());
+            }
+        });
+    }
     // ========== SERVICE TAMBAHAN ==========
     interface UserService {
         @Headers({
@@ -355,8 +459,37 @@ public class SupabaseAuth {
                 @Query("select") String select,               // specify fields to return
                 @Query("order") String order                  // order by field, default ascending
         );
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY,
+                "Prefer: return=minimal" // Kita tidak butuh balasan
+        })
+        @POST("rpc/buat_reservasi_lengkap") // NAMA RPC BARU KITA
+        Call<Void> buatReservasi(@Body BuatReservasiRequest body);
     }
-
+    interface KuotaService {
+        @Headers({
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @GET("rest/v1/kuota_harian?select=kuota_maksimal,kuota_terpesan")
+        Call<List<KuotaHarian>> getKuota(
+                @Query("tanggal_kuota") String tanggalQuery // eg: "eq.2025-10-31"
+        );
+    }
+    interface StorageService {
+        @Headers({
+                "apikey: " + API_KEY
+                // Hapus "Authorization: Bearer " + API_KEY dari sini
+        })
+        @POST("storage/v1/object/surat-sehat/{fileName}")
+        Call<JsonObject> uploadFile(
+                @Header("Authorization") String authToken, // <-- TAMBAHKAN INI
+                @Path("fileName") String fileName,
+                @Body okhttp3.RequestBody fileBody
+        );
+    }
     // ========== CALLBACKS ==========
     public interface AuthCallback {
         void onSuccess(String accessToken, String userId);
@@ -390,6 +523,21 @@ public class SupabaseAuth {
 
     public interface ReservasiCallback {
         void onSuccess(List<Reservasi> reservasiList);
+        void onError(String errorMessage);
+    }
+
+    public interface KuotaCallback {
+        void onSuccess(KuotaHarian kuota);
+        void onError(String errorMessage);
+    }
+
+    public interface UploadCallback {
+        void onSuccess(String publicUrl);
+        void onError(String errorMessage);
+    }
+
+    public interface GeneralCallback {
+        void onSuccess();
         void onError(String errorMessage);
     }
 

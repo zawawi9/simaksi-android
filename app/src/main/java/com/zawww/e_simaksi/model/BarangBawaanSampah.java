@@ -2,6 +2,12 @@ package com.zawww.e_simaksi.model;
 
 import com.google.gson.annotations.SerializedName;
 public class BarangBawaanSampah {
+    public BarangBawaanSampah(String namaBarang, String jenisSampah, int jumlah) {
+        this.namaBarang = namaBarang;
+        this.jenisSampah = jenisSampah;
+        this.jumlah = jumlah;
+        // Kita biarkan idBarang dan idReservasi null/0
+    }
 
     @SerializedName("id_barang")
     private long idBarang;

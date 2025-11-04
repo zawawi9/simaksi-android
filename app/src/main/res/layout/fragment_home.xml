@@ -104,6 +104,7 @@
                 android:padding="8dp">
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/card_pesan_tiket"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"

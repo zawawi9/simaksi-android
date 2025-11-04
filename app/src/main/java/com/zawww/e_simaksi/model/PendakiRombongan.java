@@ -2,6 +2,17 @@ package com.zawww.e_simaksi.model;
 
 import com.google.gson.annotations.SerializedName;
 public class PendakiRombongan {
+    public PendakiRombongan(String namaLengkap, String nik, String alamat, String nomorTelepon, String kontakDarurat) {
+        this.namaLengkap = namaLengkap;
+        this.nik = nik;
+        this.alamat = alamat;
+        this.nomorTelepon = nomorTelepon;
+        this.kontakDarurat = kontakDarurat;
+        // Kita biarkan idPendaki, idReservasi, dan urlSuratSehat null/0
+    }
+    public void setUrlSuratSehat(String urlSuratSehat) {
+        this.urlSuratSehat = urlSuratSehat;
+    }
 
     @SerializedName("id_pendaki")
     private long idPendaki;
