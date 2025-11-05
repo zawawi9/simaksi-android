@@ -227,7 +227,7 @@ public class ReservasiStep3Fragment extends Fragment {
                 reservasiBody.put("tanggal_keluar", viewModel.tanggalKeluar.getValue());
                 reservasiBody.put("jumlah_pendaki", jumlahPendaki);
                 reservasiBody.put("jumlah_tiket_parkir", jumlahParkir);
-                reservasiBody.put("total_harga", "rpc(hitung_total_harga, p_jumlah_pendaki:=" + jumlahPendaki + ", p_jumlah_parkir:=" + jumlahParkir + ")");
+                reservasiBody.put("total_harga", viewModel.totalHarga.getValue());
                 reservasiBody.put("status", "menunggu_pembayaran");
 
                 Log.d("Step3_Trans", "LANGKAH 2: Insert ke tabel reservasi...");
@@ -235,7 +235,13 @@ public class ReservasiStep3Fragment extends Fragment {
                     @Override
                     public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
                         if (!response.isSuccessful() || response.body() == null || response.body().isEmpty()) {
-                            Log.e("Step3_Trans", "Gagal insert reservasi: " + response.message());
+                            String errorMsg;
+                            try {
+                                errorMsg = response.errorBody() != null ? response.errorBody().string() : response.message();
+                            } catch (java.io.IOException e) {
+                                errorMsg = "Gagal membaca response body error.";
+                            }
+                            Log.e("Step3_Trans", "Gagal insert reservasi: " + errorMsg);
                             Toast.makeText(getContext(), "Gagal membuat reservasi.", Toast.LENGTH_LONG).show();
                             parentReservasiFragment.showLoading(false);
                             // TODO: Buat fungsi RPC 'kembalikan_kuota(idKuotaBaru, jumlahPendaki)'
