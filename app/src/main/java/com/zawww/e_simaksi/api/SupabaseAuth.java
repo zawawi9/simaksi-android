@@ -605,7 +605,7 @@ public class SupabaseAuth {
                 "Content-Type: application/json",
                 "apikey: " + API_KEY
         })
-        @POST("rpc/cek_dan_ambil_kuota")
+        @POST("rest/v1/rpc/cek_dan_ambil_kuota")
         Call<Long> cekDanAmbilKuota(
                 @Header("Authorization") String authToken,
                 @Body Map<String, Object> body
