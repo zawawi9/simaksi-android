@@ -26,6 +26,7 @@ public class ReservasiSharedViewModel extends ViewModel {
     public final HashMap<String, Uri> mapSuratSehat = new HashMap<>();
     public final List<PendakiRombongan> listPendaki = new ArrayList<>();
     public final List<BarangBawaanSampah> listBarang = new ArrayList<>();
+    public final MutableLiveData<Integer> jumlahParkir = new MutableLiveData<>(0);
 
     public void setStep1Valid(boolean isValid) {
         _isStep1Valid.setValue(isValid);

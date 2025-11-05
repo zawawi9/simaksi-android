@@ -7,9 +7,13 @@ import android.util.Log;
 import com.google.gson.JsonObject;
 import com.zawww.e_simaksi.model.BuatReservasiRequest;
 import com.zawww.e_simaksi.model.KuotaHarian;
+import com.zawww.e_simaksi.model.PengaturanBiaya;
 import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
+import com.zawww.e_simaksi.model.BarangBawaanSampah;
+import com.zawww.e_simaksi.model.PendakiRombongan;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -42,8 +46,10 @@ public class SupabaseAuth {
     private static final ProfileService profileService = retrofit.create(ProfileService.class);
     private static final PromosiService promosiService = retrofit.create(PromosiService.class);
     public static final ReservasiService reservasiService = retrofit.create(ReservasiService.class);
-    private static final KuotaService kuotaService = retrofit.create(KuotaService.class);
+    public static final KuotaService kuotaService = retrofit.create(KuotaService.class);
     private static final StorageService storageService = retrofit.create(StorageService.class);
+    private static final PengaturanBiayaService pengaturanBiayaService = retrofit.create(PengaturanBiayaService.class);
+
     public static void getPromosiPoster(PromosiCallback callback) {
         // Panggil service untuk mengambil data
         promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
@@ -162,6 +168,7 @@ public class SupabaseAuth {
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject json = response.body();
                     String accessToken = json.get("access_token").getAsString();
+                    String refreshToken = json.get("refresh_token").getAsString(); // Ambil refresh token
                     String userId = json.getAsJsonObject("user").get("id").getAsString();
 
                     getUserInfo(accessToken, new UserInfoCallback() {
@@ -169,7 +176,7 @@ public class SupabaseAuth {
                         public void onSuccess(JsonObject userData) {
                             if (userData != null && userData.has("email_confirmed_at") && !userData.get("email_confirmed_at").isJsonNull()) {
                                 Log.d("SupabaseAuth", "✅ Email sudah diverifikasi, login sukses.");
-                                callback.onSuccess(accessToken, userId);
+                                callback.onSuccess(accessToken, userId, refreshToken);
                             } else {
                                 Log.w("SupabaseAuth", "⚠️ Email belum diverifikasi.");
                                 callback.onError("Silakan verifikasi email Anda sebelum login.");
@@ -192,6 +199,39 @@ public class SupabaseAuth {
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("SupabaseAuth", "⚠️ Error koneksi: " + t.getMessage());
                 callback.onError("Error koneksi: " + t.getMessage());
+            }
+        });
+    }
+
+    public static void refreshAccessToken(String refreshToken, AuthCallback callback) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("refresh_token", refreshToken);
+
+        authService.refreshToken(body).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    JsonObject json = response.body();
+                    String newAccessToken = json.get("access_token").getAsString();
+                    String newRefreshToken = json.get("refresh_token").getAsString();
+                    String userId = json.getAsJsonObject("user").get("id").getAsString();
+                    Log.d("SupabaseAuth", "✅ Token berhasil diperbarui.");
+                    callback.onSuccess(newAccessToken, userId, newRefreshToken);
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal memperbarui token: " + errBody);
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError("Gagal memperbarui token: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi refresh token: " + t.getMessage());
+                callback.onError("Koneksi refresh token gagal: " + t.getMessage());
             }
         });
     }
@@ -306,16 +346,66 @@ public class SupabaseAuth {
             }
         });
     }
+    public static void uploadSuratSehatWithRefresh(Context context, FITURLOGIN.SessionManager sessionManager, Uri fileUri, String fileName, UploadCallback callback) {
+        String refreshToken = sessionManager.getRefreshToken();
+        if (refreshToken == null) {
+            callback.onError("Gagal upload: Sesi tidak valid (refresh token tidak ada).");
+            return;
+        }
+
+        Log.d("SupabaseAuth", "Sesi token sedang diperbarui sebelum upload...");
+        refreshAccessToken(refreshToken, new AuthCallback() {
+            @Override
+            public void onSuccess(String newAccessToken, String userId, String newRefreshToken) {
+                Log.d("SupabaseAuth", "Token berhasil diperbarui. Memulai upload...");
+                // Ambil email yang ada dari session manager
+                String email = sessionManager.getUserEmail();
+                // Panggil createLoginSession dengan 4 parameter
+                sessionManager.createLoginSession(newAccessToken, userId, email, newRefreshToken);
+                // Panggil metode upload yang asli dengan token baru
+                uploadSuratSehat(context, newAccessToken, fileUri, fileName, callback);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e("SupabaseAuth", "Gagal memperbarui token saat akan upload: " + errorMessage);
+                callback.onError("Gagal upload: Sesi Anda berakhir. Silakan login kembali.");
+            }
+        });
+    }
+
     public static void uploadSuratSehat(Context context, String accessToken, Uri fileUri, String fileName, UploadCallback callback) {
+
+        // Pengecekan keamanan, pastikan token ada
+        if (accessToken == null) {
+            callback.onError("Gagal upload: Access token tidak valid (null).");
+            return;
+        }
+
         try {
             InputStream inputStream = context.getContentResolver().openInputStream(fileUri);
-            byte[] fileBytes = new byte[inputStream.available()];
-            inputStream.read(fileBytes);
+            java.io.ByteArrayOutputStream byteBuffer = new java.io.ByteArrayOutputStream();
+            int bufferSize = 1024;
+            byte[] buffer = new byte[bufferSize];
+
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                byteBuffer.write(buffer, 0, len);
+            }
+            byte[] fileBytes = byteBuffer.toByteArray();
             inputStream.close();
+            // --- AKHIR PERBAIKAN ---
+
+            // Pengecekan keamanan jika file benar-benar kosong
+            if (fileBytes.length == 0) {
+                Log.e("SupabaseAuth", "Gagal membaca file, ukuran file 0 byte.");
+                callback.onError("Gagal membaca file (0 bytes).");
+                return;
+            }
 
             String mimeType = context.getContentResolver().getType(fileUri);
             if (mimeType == null) {
-                mimeType = "application/octet-stream";
+                mimeType = "application/octet-stream"; // Tipe default
             }
 
             okhttp3.RequestBody requestFile = okhttp3.RequestBody.create(
@@ -323,22 +413,22 @@ public class SupabaseAuth {
                     fileBytes
             );
 
-            // BUAT Bearer token yang benar
             String bearerToken = "Bearer " + accessToken;
 
-            // Panggil service storage DENGAN bearerToken
+            // Panggil service storage
             storageService.uploadFile(bearerToken, fileName, requestFile).enqueue(new Callback<JsonObject>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     if (response.isSuccessful()) {
+                        // Berhasil upload, sekarang buat URL publiknya
                         String publicUrl = BASE_URL + "storage/v1/object/public/surat-sehat/" + fileName;
                         Log.d("SupabaseAuth", "✅ File terupload: " + publicUrl);
                         callback.onSuccess(publicUrl);
                     } else {
                         try {
-                            String err = response.errorBody() != null ? response.errorBody().string() : "null";
+                            String err = response.errorBody() != null ? response.errorBody().string() : response.message();
                             Log.e("SupabaseAuth", "❌ Gagal upload: " + err);
-                            callback.onError("Gagal upload file: " + response.message());
+                            callback.onError("Gagal upload file: " + err);
                         } catch (IOException e) {
                             callback.onError("Gagal upload file: " + e.getMessage());
                         }
@@ -356,27 +446,20 @@ public class SupabaseAuth {
             callback.onError("Gagal membaca file: " + e.getMessage());
         }
     }
-    public static void kirimReservasi(BuatReservasiRequest requestBody, GeneralCallback callback) {
-        reservasiService.buatReservasi(requestBody).enqueue(new Callback<Void>() {
+
+    public static void getPengaturanBiaya(BiayaCallback callback) {
+        pengaturanBiayaService.getSemuaBiaya().enqueue(new Callback<List<PengaturanBiaya>>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("SupabaseAuth", "✅ Reservasi berhasil dibuat!");
-                    callback.onSuccess();
+            public void onResponse(Call<List<PengaturanBiaya>> call, Response<List<PengaturanBiaya>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
                 } else {
-                    try {
-                        String err = response.errorBody() != null ? response.errorBody().string() : "null";
-                        Log.e("SupabaseAuth", "❌ Gagal buat reservasi: " + err);
-                        callback.onError("Gagal membuat reservasi: " + response.message());
-                    } catch (IOException e) {
-                        callback.onError("Gagal membuat reservasi: " + e.getMessage());
-                    }
+                    callback.onError("Gagal mengambil data harga");
                 }
             }
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("SupabaseAuth", "⚠️ Gagal koneksi RPC: " + t.getMessage());
-                callback.onError("Koneksi RPC gagal: " + t.getMessage());
+            public void onFailure(Call<List<PengaturanBiaya>> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
             }
         });
     }
@@ -404,6 +487,13 @@ public class SupabaseAuth {
         })
         @POST("auth/v1/token?grant_type=password")
         Call<JsonObject> login(@Body Map<String, Object> body);
+
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY
+        })
+        @POST("auth/v1/token?grant_type=refresh_token")
+        Call<JsonObject> refreshToken(@Body Map<String, Object> body);
     }
 
     interface ProfileService {
@@ -434,9 +524,10 @@ public class SupabaseAuth {
         })
         @GET("rest/v1/reservasi")
         Call<List<Reservasi>> getDetailReservasi(
-                @Query("id_reservasi") String idQuery, // eg: "eq.1"
+                @Query("id_reservasi") String idQuery,
                 @Query("select") String select
         );
+
         @Headers({
                 "apikey: " + API_KEY,
                 "Authorization: Bearer " + API_KEY
@@ -444,31 +535,64 @@ public class SupabaseAuth {
         @GET("rest/v1/reservasi")
         Call<List<Reservasi>> getJadwalAktif(
                 @Query("id_pengguna") String idPenggunaQuery,
-                @Query("status") String statusQuery,     // eq.terkonfirmasi
-                @Query("select") String select,          // id_reservasi,tanggal_pendakian,dll
+                @Query("status") String statusQuery,
+                @Query("select") String select,
                 @Query("order") String order,
                 @Query("limit") int limit
         );
+
         @Headers({
                 "apikey: " + API_KEY,
                 "Authorization: Bearer " + API_KEY
         })
         @GET("rest/v1/reservasi")
         Call<List<Reservasi>> getReservasiByUser(
-                @Query("id_pengguna") String idPenggunaQuery, // eg: "eq.user-id-here"
-                @Query("select") String select,               // specify fields to return
-                @Query("order") String order                  // order by field, default ascending
+                @Query("id_pengguna") String idPenggunaQuery,
+                @Query("select") String select,
+                @Query("order") String order
         );
+
+        // --- INI ADALAH 3 METHOD BARU UNTUK PLAN B ---
+
+        // 1. Insert ke tabel 'reservasi'
         @Headers({
                 "Content-Type: application/json",
                 "apikey: " + API_KEY,
-                "Authorization: Bearer " + API_KEY,
-                "Prefer: return=minimal" // Kita tidak butuh balasan
+                // Kita butuh 'service_role' key untuk memanggil rpc() di dalam insert
+                // "Authorization: Bearer " + API_KEY, // Ini akan ditimpa oleh @Header
+                "Prefer: return=representation,resolution=merge-duplicates"
         })
-        @POST("rpc/buat_reservasi_lengkap") // NAMA RPC BARU KITA
-        Call<Void> buatReservasi(@Body BuatReservasiRequest body);
+        @POST("rest/v1/reservasi")
+        Call<List<Reservasi>> insertReservasi(
+                @Header("Authorization") String authToken, // Ini mengirim token pengguna
+                @Body Map<String, Object> body
+        );
+
+        // 2. Insert ke 'pendaki_rombongan' (bisa banyak)
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: resolution=merge-duplicates"
+        })
+        @POST("rest/v1/pendaki_rombongan")
+        Call<Void> insertRombongan(
+                @Header("Authorization") String authToken,
+                @Body List<PendakiRombongan> body
+        );
+
+        // 3. Insert ke 'barang_bawaan_sampah' (bisa banyak)
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: resolution=merge-duplicates"
+        })
+        @POST("rest/v1/barang_bawaan_sampah")
+        Call<Void> insertBarang(
+                @Header("Authorization") String authToken,
+                @Body List<BarangBawaanSampah> body
+        );
     }
-    interface KuotaService {
+    public interface KuotaService {
         @Headers({
                 "apikey: " + API_KEY,
                 "Authorization: Bearer " + API_KEY
@@ -477,22 +601,40 @@ public class SupabaseAuth {
         Call<List<KuotaHarian>> getKuota(
                 @Query("tanggal_kuota") String tanggalQuery // eg: "eq.2025-10-31"
         );
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY
+        })
+        @POST("rpc/cek_dan_ambil_kuota")
+        Call<Long> cekDanAmbilKuota(
+                @Header("Authorization") String authToken,
+                @Body Map<String, Object> body
+        );
     }
-    interface StorageService {
+    public interface StorageService { // Pastikan ini 'public'
         @Headers({
                 "apikey: " + API_KEY
-                // Hapus "Authorization: Bearer " + API_KEY dari sini
+                // Hapus "Authorization" yang hardcode dari sini
         })
         @POST("storage/v1/object/surat-sehat/{fileName}")
         Call<JsonObject> uploadFile(
-                @Header("Authorization") String authToken, // <-- TAMBAHKAN INI
+                @Header("Authorization") String authToken, // <-- Ini mengirim token pengguna
                 @Path("fileName") String fileName,
                 @Body okhttp3.RequestBody fileBody
         );
     }
+
+    public interface PengaturanBiayaService {
+        @Headers({
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @GET("rest/v1/pengaturan_biaya?select=nama_item,harga")
+        Call<List<PengaturanBiaya>> getSemuaBiaya();
+    }
     // ========== CALLBACKS ==========
     public interface AuthCallback {
-        void onSuccess(String accessToken, String userId);
+        void onSuccess(String accessToken, String userId, String refreshToken);
         void onError(String errorMessage);
     }
 
@@ -538,6 +680,11 @@ public class SupabaseAuth {
 
     public interface GeneralCallback {
         void onSuccess();
+        void onError(String errorMessage);
+    }
+
+    public interface BiayaCallback {
+        void onSuccess(List<PengaturanBiaya> biayaList);
         void onError(String errorMessage);
     }
 

@@ -71,13 +71,13 @@ public class LoginActivity extends AppCompatActivity {
 
             SupabaseAuth.loginUser(email, password, new SupabaseAuth.AuthCallback() {
                 @Override
-                public void onSuccess(String accessToken, String userId) {
+                public void onSuccess(String accessToken, String userId, String refreshToken) {
                     progressBar.setVisibility(View.GONE);
                     buttonLogin.setEnabled(true);
                     Toast.makeText(LoginActivity.this, "Login berhasil!", Toast.LENGTH_SHORT).show();
 
                     // Simpan informasi login menggunakan SessionManager
-                    sessionManager.createLoginSession(accessToken, userId, email);
+                    sessionManager.createLoginSession(accessToken, userId, email, refreshToken);
 
                     // Pindah ke dashboard
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);

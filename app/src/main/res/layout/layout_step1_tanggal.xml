@@ -82,6 +82,27 @@
                     android:importantForAccessibility="no" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_jumlah_parkir"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/reservasi_jumlah_parkir_hint"
+                app:startIconDrawable="@drawable/ic_tiket_parkir">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_jumlah_parkir"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:focusable="false"
+                    android:inputType="number"
+                    android:text="0"
+                    android:cursorVisible="false"
+                    android:importantForAccessibility="no" />
+            </com.google.android.material.textfield.TextInputLayout>
+
             <TextView
                 android:id="@+id/tv_status_kuota"
                 android:layout_width="match_parent"

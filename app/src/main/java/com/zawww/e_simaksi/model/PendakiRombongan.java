@@ -46,4 +46,7 @@ public class PendakiRombongan {
     public String getNomorTelepon() { return nomorTelepon; }
     public String getKontakDarurat() { return kontakDarurat; }
     public String getUrlSuratSehat() { return urlSuratSehat; }
+    public void setIdReservasi(long idReservasi) {
+        this.idReservasi = idReservasi;
+    }
 }

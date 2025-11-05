@@ -1,7 +1,6 @@
-package dashboard;
+package dashboard; // Sesuaikan package Anda
 
 import android.content.ContentResolver;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,30 +24,33 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.textfield.TextInputEditText;
 
 import com.zawww.e_simaksi.R;
-import com.zawww.e_simaksi.api.SupabaseAuth; // PENTING
+import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.BarangBawaanSampah;
-import com.zawww.e_simaksi.model.BuatReservasiRequest;
 import com.zawww.e_simaksi.model.PendakiRombongan;
+import com.zawww.e_simaksi.model.Reservasi;
 import FITURLOGIN.SessionManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ReservasiStep3Fragment extends Fragment {
 
     private ReservasiSharedViewModel viewModel;
     private ReservasiFragment parentReservasiFragment;
     private LayoutInflater inflater;
-
-    // Views
     private LinearLayout layoutListBarang;
     private Button btnTambahBarang;
     private TextView tvRingkasanDetail, tvRingkasanTotal;
-
     private final List<View> barangViews = new ArrayList<>();
-    private SessionManager sessionManager; // Variabel untuk SessionManager
+    private SessionManager sessionManager;
 
     @Nullable
     @Override
@@ -61,14 +63,10 @@ public class ReservasiStep3Fragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Hubungkan ke ViewModel Induk
         viewModel = new ViewModelProvider(requireParentFragment()).get(ReservasiSharedViewModel.class);
         parentReservasiFragment = (ReservasiFragment) requireParentFragment();
-
-        // Inisialisasi SessionManager
         sessionManager = new SessionManager(requireContext());
 
-        // Binding
         layoutListBarang = view.findViewById(R.id.layout_list_barang);
         btnTambahBarang = view.findViewById(R.id.btn_tambah_barang);
         tvRingkasanDetail = view.findViewById(R.id.tv_ringkasan_detail);
@@ -88,7 +86,6 @@ public class ReservasiStep3Fragment extends Fragment {
     private void setupBarangBawaanListeners() {
         btnTambahBarang.setOnClickListener(v -> {
             View barangView = inflater.inflate(R.layout.item_barang, layoutListBarang, false);
-
             AutoCompleteTextView spinner = barangView.findViewById(R.id.spinner_jenis_sampah);
             String[] jenisSampah = new String[] {"PLASTIK", "LOGAM", "KACA", "LAINNYA"};
             ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -97,13 +94,11 @@ public class ReservasiStep3Fragment extends Fragment {
                     jenisSampah
             );
             spinner.setAdapter(adapter);
-
             ImageButton btnHapus = barangView.findViewById(R.id.btn_hapus_barang);
             btnHapus.setOnClickListener(vHapus -> {
                 layoutListBarang.removeView(barangView);
                 barangViews.remove(barangView);
             });
-
             barangViews.add(barangView);
             layoutListBarang.addView(barangView);
         });
@@ -113,10 +108,8 @@ public class ReservasiStep3Fragment extends Fragment {
         String tanggal = viewModel.tanggalMasuk.getValue();
         int jumlah = viewModel.jumlahPendaki.getValue();
         int total = viewModel.totalHarga.getValue();
-
         String detail = "Tanggal Masuk: " + tanggal + "\n" +
                 "Jumlah Pendaki: " + jumlah + " orang";
-
         tvRingkasanDetail.setText(detail);
         tvRingkasanTotal.setText("Total: Rp " + total);
     }
@@ -127,16 +120,13 @@ public class ReservasiStep3Fragment extends Fragment {
             TextInputEditText etNama = barangView.findViewById(R.id.et_nama_barang);
             TextInputEditText etJumlah = barangView.findViewById(R.id.et_jumlah_barang);
             AutoCompleteTextView spinner = barangView.findViewById(R.id.spinner_jenis_sampah);
-
             String nama = etNama.getText().toString();
             String jumlahStr = etJumlah.getText().toString();
             String jenis = spinner.getText().toString();
-
             if (nama.isEmpty() || jumlahStr.isEmpty() || jenis.isEmpty()) {
                 Toast.makeText(getContext(), "Harap lengkapi semua data barang bawaan", Toast.LENGTH_SHORT).show();
                 return false;
             }
-
             int jumlah = Integer.parseInt(jumlahStr);
             viewModel.listBarang.add(new BarangBawaanSampah(nama, jenis, jumlah));
         }
@@ -144,31 +134,20 @@ public class ReservasiStep3Fragment extends Fragment {
         return true;
     }
 
+
     // --- PROSES SUBMIT FINAL ---
 
     private void startFullSubmissionProcess() {
         Log.d("Step3", "Memulai proses submit...");
-        parentReservasiFragment.showLoading(true); // Tampilkan loading
-
-        // PERBAIKAN: Ambil User ID (untuk RPC) dan Access Token (untuk Upload)
-        String currentUserId = sessionManager.getUserId();
-        String accessToken = sessionManager.getAccessToken();
-
-        if (currentUserId == null || accessToken == null) {
-            Log.e("Step3", "Submit GAGAL: User ID atau Access Token tidak ditemukan di session.");
-            Toast.makeText(getContext(), "Sesi Anda habis. Silakan login kembali.", Toast.LENGTH_LONG).show();
-            parentReservasiFragment.showLoading(false);
-            // TODO: Navigasi paksa ke LoginActivity
-            return;
-        }
+        parentReservasiFragment.showLoading(true);
 
         AtomicInteger uploadCounter = new AtomicInteger(0);
         int totalFiles = viewModel.mapSuratSehat.size();
 
-        if (totalFiles == 0) {
-            Log.e("Step3", "Tidak ada file surat sehat untuk di-upload.");
+        if (totalFiles == 0 || totalFiles != viewModel.listPendaki.size()) {
+            Log.e("Step3", "Jumlah file (" + totalFiles + ") tidak sama dengan jumlah pendaki (" + viewModel.listPendaki.size() + ").");
+            Toast.makeText(getContext(), "Error: Harap upload surat sehat untuk SETIAP pendaki.", Toast.LENGTH_SHORT).show();
             parentReservasiFragment.showLoading(false);
-            Toast.makeText(getContext(), "Error: Tidak ada data surat sehat.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -179,71 +158,173 @@ public class ReservasiStep3Fragment extends Fragment {
 
             String fileExtension = getFileExtension(fileUri);
             String fileName = nik + "_" + System.currentTimeMillis() + "." + fileExtension;
-
             Log.d("Step3", "Mengupload file untuk " + nik + ": " + fileName);
 
-            // PERBAIKAN: Kirim 'accessToken' yang valid ke method upload
-            SupabaseAuth.uploadSuratSehat(requireContext(), accessToken, fileUri, fileName, new SupabaseAuth.UploadCallback() {
+            // PANGGIL METODE BARU YANG MENANGANI REFRESH SECARA OTOMATIS
+            SupabaseAuth.uploadSuratSehatWithRefresh(requireContext(), sessionManager, fileUri, fileName, new SupabaseAuth.UploadCallback() {
                 @Override
                 public void onSuccess(String publicUrl) {
                     Log.d("Step3", "Upload sukses untuk " + nik + ". URL: " + publicUrl);
                     pendaki.setUrlSuratSehat(publicUrl);
 
                     if (uploadCounter.incrementAndGet() == totalFiles) {
-                        Log.d("Step3", "Semua file berhasil di-upload. Membuat reservasi...");
-                        // Kirim 'currentUserId' yang valid
-                        createReservasiObject(currentUserId);
-                        // Hapus baris di bawah ini jika masih ada
-                        // createReservasiObject(currentUserId);
+                        Log.d("Step3", "Semua file berhasil di-upload. Memulai Transaksi Database...");
+                        // Ambil token dan user id yang sudah diperbarui dari session untuk langkah selanjutnya
+                        String refreshedToken = sessionManager.getAccessToken();
+                        String refreshedUserId = sessionManager.getUserId();
+                        mulaiTransaksiDatabase(refreshedUserId, refreshedToken);
                     }
                 }
-
                 @Override
                 public void onError(String errorMessage) {
                     Log.e("Step3", "Gagal upload untuk " + nik + ": " + errorMessage);
-                    Toast.makeText(getContext(), "Gagal upload surat sehat untuk " + pendaki.getNamaLengkap(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Gagal upload surat sehat untuk " + pendaki.getNamaLengkap() + ". Penyebab: " + errorMessage, Toast.LENGTH_LONG).show();
                     parentReservasiFragment.showLoading(false);
                 }
             });
         }
     }
 
-    private void createReservasiObject(String userId) {
-        String tanggalKeluar = viewModel.tanggalKeluar.getValue();
-        if (tanggalKeluar == null || tanggalKeluar.isEmpty()) {
-            tanggalKeluar = viewModel.tanggalMasuk.getValue();
-        }
+    private void mulaiTransaksiDatabase(String userId, String accessToken) {
+        String bearerToken = "Bearer " + accessToken;
 
-        BuatReservasiRequest request = new BuatReservasiRequest(
-                userId,
-                viewModel.tanggalMasuk.getValue(),
-                tanggalKeluar,
-                viewModel.jumlahPendaki.getValue(),
-                0, // Jumlah Parkir (hardcode 0)
-                null, // Kode Promo (hardcode null)
-                viewModel.listPendaki,
-                viewModel.listBarang
-        );
+        String tanggal = viewModel.tanggalMasuk.getValue();
+        int jumlahPendaki = viewModel.jumlahPendaki.getValue();
+        int jumlahParkir = viewModel.jumlahParkir.getValue();
 
-        SupabaseAuth.kirimReservasi(request, new SupabaseAuth.GeneralCallback() {
+        // LANGKAH 1: Panggil RPC 'cek_dan_ambil_kuota'
+        Log.d("Step3_Trans", "LANGKAH 1: Cek dan ambil kuota...");
+        Map<String, Object> kuotaParams = new HashMap<>();
+        kuotaParams.put("p_tanggal", tanggal);
+        kuotaParams.put("p_jumlah", jumlahPendaki);
+
+        SupabaseAuth.kuotaService.cekDanAmbilKuota(bearerToken, kuotaParams).enqueue(new Callback<Long>() {
             @Override
-            public void onSuccess() {
-                parentReservasiFragment.showLoading(false);
-                Log.d("Step3", "RESERVASI BERHASIL DIBUAT!");
-                Toast.makeText(getContext(), "Reservasi berhasil dibuat!", Toast.LENGTH_LONG).show();
+            public void onResponse(Call<Long> call, Response<Long> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    try {
+                        String err = response.errorBody() != null ? response.errorBody().string() : "Kuota Habis";
+                        Log.e("Step3_Trans", "Gagal ambil kuota: " + err);
+                        Toast.makeText(getContext(), "Gagal: " + err, Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(), "Gagal: Kuota tidak mencukupi.", Toast.LENGTH_LONG).show();
+                    }
+                    parentReservasiFragment.showLoading(false);
+                    return;
+                }
 
-                // Navigasi kembali ke Home (bersihkan stack)
-                // Kita gunakan getParentFragmentManager() karena ini adalah child fragment
-                getParentFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                long idKuotaBaru = response.body();
+                Log.d("Step3_Trans", "LANGKAH 1 Sukses. ID Kuota: " + idKuotaBaru);
+
+                // LANGKAH 2: INSERT ke tabel 'reservasi'
+                String kodeReservasi = "BK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+                Map<String, Object> reservasiBody = new HashMap<>();
+                reservasiBody.put("id_pengguna", userId);
+                reservasiBody.put("id_kuota", idKuotaBaru);
+                reservasiBody.put("kode_reservasi", kodeReservasi);
+                reservasiBody.put("tanggal_pendakian", tanggal);
+                reservasiBody.put("tanggal_keluar", viewModel.tanggalKeluar.getValue());
+                reservasiBody.put("jumlah_pendaki", jumlahPendaki);
+                reservasiBody.put("jumlah_tiket_parkir", jumlahParkir);
+                reservasiBody.put("total_harga", "rpc(hitung_total_harga, p_jumlah_pendaki:=" + jumlahPendaki + ", p_jumlah_parkir:=" + jumlahParkir + ")");
+                reservasiBody.put("status", "menunggu_pembayaran");
+
+                Log.d("Step3_Trans", "LANGKAH 2: Insert ke tabel reservasi...");
+                SupabaseAuth.reservasiService.insertReservasi(bearerToken, reservasiBody).enqueue(new Callback<List<Reservasi>>() {
+                    @Override
+                    public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
+                        if (!response.isSuccessful() || response.body() == null || response.body().isEmpty()) {
+                            Log.e("Step3_Trans", "Gagal insert reservasi: " + response.message());
+                            Toast.makeText(getContext(), "Gagal membuat reservasi.", Toast.LENGTH_LONG).show();
+                            parentReservasiFragment.showLoading(false);
+                            // TODO: Buat fungsi RPC 'kembalikan_kuota(idKuotaBaru, jumlahPendaki)'
+                            return;
+                        }
+
+                        Reservasi reservasiBaru = response.body().get(0);
+                        long idReservasiBaru = reservasiBaru.getIdReservasi();
+                        Log.d("Step3_Trans", "LANGKAH 2 Sukses. ID Reservasi: " + idReservasiBaru);
+
+                        // LANGKAH 3: Set ID reservasi ke semua objek pendaki & barang
+                        for (PendakiRombongan pendaki : viewModel.listPendaki) {
+                            pendaki.setIdReservasi(idReservasiBaru);
+                        }
+                        for (BarangBawaanSampah barang : viewModel.listBarang) {
+                            barang.setIdReservasi(idReservasiBaru);
+                        }
+
+                        // LANGKAH 4: INSERT Rombongan & Barang
+                        insertRombonganDanBarang(bearerToken);
+                    }
+                    @Override
+                    public void onFailure(Call<List<Reservasi>> call, Throwable t) {
+                        Log.e("Step3_Trans", "Koneksi Gagal (Reservasi): " + t.getMessage());
+                        parentReservasiFragment.showLoading(false);
+                    }
+                });
             }
-
             @Override
-            public void onError(String errorMessage) {
+            public void onFailure(Call<Long> call, Throwable t) {
+                Log.e("Step3_Trans", "Koneksi Gagal (Kuota RPC): " + t.getMessage());
                 parentReservasiFragment.showLoading(false);
-                Log.e("Step3", "Gagal RPC: " + errorMessage);
-                Toast.makeText(getContext(), "Gagal membuat reservasi: " + errorMessage, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    // --- METHOD YANG HILANG (TAMBAHKAN INI) ---
+    private void insertRombonganDanBarang(String bearerToken) {
+        Log.d("Step3_Trans", "LANGKAH 3: Insert " + viewModel.listPendaki.size() + " pendaki...");
+
+        SupabaseAuth.reservasiService.insertRombongan(bearerToken, viewModel.listPendaki).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) {
+                    Log.e("Step3_Trans", "Gagal insert rombongan: " + response.message());
+                    parentReservasiFragment.showLoading(false);
+                    return;
+                }
+
+                Log.d("Step3_Trans", "LANGKAH 3 Sukses.");
+
+                if (viewModel.listBarang.isEmpty()) {
+                    Log.d("Step3_Trans", "Tidak ada barang. Selesai.");
+                    reservasiSukses();
+                    return;
+                }
+
+                Log.d("Step3_Trans", "LANGKAH 4: Insert " + viewModel.listBarang.size() + " barang...");
+                SupabaseAuth.reservasiService.insertBarang(bearerToken, viewModel.listBarang).enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (!response.isSuccessful()) {
+                            Log.e("Step3_Trans", "Gagal insert barang: " + response.message());
+                            parentReservasiFragment.showLoading(false);
+                            return;
+                        }
+                        Log.d("Step3_Trans", "LANGKAH 4 Sukses.");
+                        reservasiSukses();
+                    }
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Log.e("Step3_Trans", "Koneksi Gagal (Barang): " + t.getMessage());
+                    }
+                });
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("Step3_Trans", "Koneksi Gagal (Rombongan): " + t.getMessage());
+            }
+        });
+    }
+
+    // --- METHOD YANG HILANG (TAMBAHKAN INI) ---
+    private void reservasiSukses() {
+        parentReservasiFragment.showLoading(false);
+        Log.d("Step3_Trans", "RESERVASI BERHASIL DIBUAT!");
+        Toast.makeText(getContext(), "Reservasi berhasil dibuat!", Toast.LENGTH_LONG).show();
+        // Kembali ke Home
+        getParentFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
     }
 
     private String getFileExtension(Uri uri) {

@@ -39,7 +39,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_arrow_down"
-                android:tint="@color/hijau_tua_brand"
+                app:tint="@color/hijau_tua_brand"
                 android:rotation="0" />
 
         </LinearLayout>

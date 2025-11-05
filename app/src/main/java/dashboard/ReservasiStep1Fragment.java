@@ -17,21 +17,29 @@ import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
+
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.KuotaHarian;
+import com.zawww.e_simaksi.model.PengaturanBiaya; // <-- LENGKAPI: Impor model baru
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List; // <-- LENGKAPI: Impor List
 import java.util.Locale;
 import java.util.TimeZone;
 
 public class ReservasiStep1Fragment extends Fragment {
 
     private ReservasiSharedViewModel viewModel;
-    private TextInputEditText etTanggalMasuk, etTanggalKeluar, etJumlahPendaki;
+    private TextInputEditText etTanggalMasuk, etTanggalKeluar, etJumlahPendaki, etJumlahParkir;
     private TextView tvStatusKuota;
     private long tanggalMasukMillis = 0;
+
+    // Ini adalah nilai default JIKA internet gagal
+    private int hargaTiketDb = 20000;
+    private int hargaParkirDb = 5000;
 
     @Nullable
     @Override
@@ -50,10 +58,37 @@ public class ReservasiStep1Fragment extends Fragment {
         etTanggalMasuk = view.findViewById(R.id.et_tanggal_masuk);
         etTanggalKeluar = view.findViewById(R.id.et_tanggal_keluar);
         etJumlahPendaki = view.findViewById(R.id.et_jumlah_pendaki);
+        etJumlahParkir = view.findViewById(R.id.et_jumlah_parkir);
         tvStatusKuota = view.findViewById(R.id.tv_status_kuota);
 
         setupDatePickerListeners();
         setupTextWatchers();
+        loadHargaDariDatabase(); // Panggil method yang mengambil harga
+    }
+
+    // <-- LENGKAPI: Method ini hilang di kode Anda
+    private void loadHargaDariDatabase() {
+        SupabaseAuth.getPengaturanBiaya(new SupabaseAuth.BiayaCallback() {
+            @Override
+            public void onSuccess(List<PengaturanBiaya> biayaList) {
+                // Loop harga dan simpan ke variabel
+                for (PengaturanBiaya item : biayaList) {
+                    if (item.getNamaItem().equals("tiket_masuk")) {
+                        hargaTiketDb = item.getHarga();
+                    } else if (item.getNamaItem().equals("tiket_parkir")) {
+                        hargaParkirDb = item.getHarga();
+                    }
+                }
+                Log.d("Step1", "Harga berhasil dimuat: Tiket=" + hargaTiketDb + ", Parkir=" + hargaParkirDb);
+                // Hitung ulang jika data sudah terisi
+                triggerKuotaCheck();
+            }
+            @Override
+            public void onError(String errorMessage) {
+                Log.e("Step1", "Gagal load harga: " + errorMessage + ". Pakai harga default.");
+                // Biarkan pakai harga default (20000 & 5000)
+            }
+        });
     }
 
     private void setupDatePickerListeners() {
@@ -79,6 +114,7 @@ public class ReservasiStep1Fragment extends Fragment {
                 etTanggalMasuk.setText(tanggalFormatted);
                 etTanggalKeluar.setText(""); // Reset tanggal keluar
                 viewModel.tanggalMasuk.setValue(tanggalFormatted); // Simpan ke ViewModel
+                viewModel.tanggalKeluar.setValue(null); // <-- LENGKAPI: Reset tanggal keluar
                 triggerKuotaCheck();
             });
             datePicker.show(getParentFragmentManager(), "DATE_PICKER_MASUK");
@@ -120,13 +156,19 @@ public class ReservasiStep1Fragment extends Fragment {
             }
         };
         etJumlahPendaki.addTextChangedListener(kuotaWatcher);
+        etJumlahParkir.addTextChangedListener(kuotaWatcher);
     }
 
     private void triggerKuotaCheck() {
         String tanggal = etTanggalMasuk.getText().toString();
         String jumlahStr = etJumlahPendaki.getText().toString();
+        String parkirStr = etJumlahParkir.getText().toString();
 
         viewModel.setStep1Valid(false); // Selalu set tidak valid saat pengecekan
+
+        if (parkirStr.isEmpty()) {
+            parkirStr = "0";
+        }
 
         if (tanggal.isEmpty() || jumlahStr.isEmpty()) {
             tvStatusKuota.setText(R.string.reservasi_status_kuota_default);
@@ -134,12 +176,15 @@ public class ReservasiStep1Fragment extends Fragment {
         }
 
         int jumlah = Integer.parseInt(jumlahStr);
+        int parkir = Integer.parseInt(parkirStr);
+
         if (jumlah <= 0 || jumlah > 10) {
             tvStatusKuota.setText("Jumlah pendaki harus antara 1-10.");
             return;
         }
 
         viewModel.jumlahPendaki.setValue(jumlah); // Simpan ke ViewModel
+        viewModel.jumlahParkir.setValue(parkir); // <-- LENGKAPI: Simpan jumlah parkir
         tvStatusKuota.setText("Mengecek kuota...");
 
         // INI DIA KONEKSI DATABASE-NYA
@@ -148,16 +193,15 @@ public class ReservasiStep1Fragment extends Fragment {
             public void onSuccess(KuotaHarian kuota) {
                 int sisaKuota = kuota.getKuotaMaksimal() - kuota.getKuotaTerpesan();
                 if (sisaKuota >= jumlah) {
-                    tvStatusKuota.setText("Kuota tersedia! Sisa: " + sisaKuota);
+                    tvStatusKuota.setText("Kuota tersedia! Sisa: ".concat(String.valueOf(sisaKuota))); // Concat agar aman
                     tvStatusKuota.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
                     viewModel.setStep1Valid(true); // <-- PENTING: Izinkan lanjut
 
-                    // Hitung harga (simulasi, ambil dari pengaturan_biaya nanti)
-                    int hargaTiket = 20000;
-                    viewModel.totalHarga.setValue(hargaTiket * jumlah);
+                    // <-- PERBAIKAN: Gunakan variabel yang benar dan hitung parkir
+                    viewModel.totalHarga.setValue((hargaTiketDb * jumlah) + (hargaParkirDb * parkir));
 
                 } else {
-                    tvStatusKuota.setText("Kuota tidak cukup. Sisa kuota: " + sisaKuota);
+                    tvStatusKuota.setText("Kuota tidak cukup. Sisa kuota: ".concat(String.valueOf(sisaKuota)));
                     tvStatusKuota.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                 }
             }
@@ -167,7 +211,10 @@ public class ReservasiStep1Fragment extends Fragment {
                 tvStatusKuota.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
             }
         });
-    }    private String formatDate(long millis) {
+    }
+
+    // <-- PERBAIKAN: Pindahkan method ini ke DALAM class
+    private String formatDate(long millis) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         return sdf.format(new Date(millis));
     }

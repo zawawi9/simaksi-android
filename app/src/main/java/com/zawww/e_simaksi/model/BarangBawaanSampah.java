@@ -23,9 +23,22 @@ public class BarangBawaanSampah {
     @SerializedName("jumlah")
     private int jumlah;
 
-    public long getIdBarang() { return idBarang; }
-    public long getIdReservasi() { return idReservasi; }
-    public String getNamaBarang() { return namaBarang; }
-    public String getJenisSampah() { return jenisSampah; }
-    public int getJumlah() { return jumlah; }
+    public long getIdBarang() {
+        return idBarang;
+    }
+    public long getIdReservasi() {
+        return idReservasi;
+    }
+    public String getNamaBarang() {
+        return namaBarang;
+    }
+    public String getJenisSampah() {
+        return jenisSampah;
+    }
+    public int getJumlah() {
+        return jumlah;
+    }
+    public void setIdReservasi(long idReservasi) {
+        this.idReservasi = idReservasi;
+    }
 }

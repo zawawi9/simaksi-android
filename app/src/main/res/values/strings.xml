@@ -40,4 +40,5 @@
     <string name="hapus_barang_content_desc">Hapus barang</string>
     <string name="item_pendaki_darurat_hint">Kontak Darurat</string>
     <string name="item_pendaki_alamat_hint">Alamat</string>
+    <string name="reservasi_jumlah_parkir_hint">Jumlah Tiket Parkir</string>
 </resources>
