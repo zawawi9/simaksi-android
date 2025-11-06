@@ -9,6 +9,9 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
@@ -71,6 +74,15 @@ public class ReservasiFragment extends Fragment {
             if (getChildFragmentManager().getBackStackEntryCount() == 0) {
                 btnLanjut.setEnabled(isValid);
             }
+        });
+
+        // MENANGANI EDGE-TO-EDGE UNTUK TOMBOL NAVIGASI
+        View navButtonsLayout = view.findViewById(R.id.nav_buttons_layout);
+        ViewCompat.setOnApplyWindowInsetsListener(navButtonsLayout, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // Terapkan tinggi system navigation bar sebagai padding bawah
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+            return insets;
         });
     }
 

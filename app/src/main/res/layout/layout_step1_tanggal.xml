@@ -5,11 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@android:color/transparent"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="@string/reservasi_langkah1_judul"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:cardBackgroundColor="#B31B3D3A" 
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp">
 
@@ -19,27 +31,23 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/reservasi_langkah1_judul"
-                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                android:textStyle="bold" />
-
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_tanggal_masuk"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:hint="@string/reservasi_tanggal_masuk_hint"
-                app:startIconDrawable="@drawable/ic_calendar_empty">
+                android:textColorHint="#E0E0E0"
+                app:boxStrokeColor="#FFFFFF"
+                app:startIconDrawable="@drawable/ic_calendar_empty"
+                app:startIconTint="@android:color/white">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_tanggal_masuk"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
+                    android:textColor="@android:color/white"
                     android:focusable="false"
                     android:cursorVisible="false"
                     android:importantForAccessibility="no" />
@@ -52,13 +60,17 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:hint="@string/reservasi_tanggal_keluar_hint"
-                app:startIconDrawable="@drawable/ic_calendar_empty">
+                android:textColorHint="#E0E0E0"
+                app:boxStrokeColor="#FFFFFF"
+                app:startIconDrawable="@drawable/ic_calendar_empty"
+                app:startIconTint="@android:color/white">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_tanggal_keluar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
+                    android:textColor="@android:color/white"
                     android:focusable="false"
                     android:cursorVisible="false"
                     android:importantForAccessibility="no" />
@@ -71,7 +83,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:hint="@string/reservasi_jumlah_pendaki_hint"
-                app:startIconDrawable="@drawable/ic_person">
+                android:textColorHint="#E0E0E0"
+                app:boxStrokeColor="#FFFFFF"
+                app:startIconDrawable="@drawable/ic_person"
+                app:startIconTint="@android:color/white">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_jumlah_pendaki"
@@ -79,6 +94,7 @@
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
                     android:inputType="number"
+                    android:textColor="@android:color/white"
                     android:importantForAccessibility="no" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -89,7 +105,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:hint="@string/reservasi_jumlah_parkir_hint"
-                app:startIconDrawable="@drawable/ic_tiket_parkir">
+                android:textColorHint="#E0E0E0"
+                app:boxStrokeColor="#FFFFFF"
+                app:startIconDrawable="@drawable/ic_tiket_parkir"
+                app:startIconTint="@android:color/white">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_jumlah_parkir"
@@ -98,6 +117,7 @@
                     android:minHeight="48dp"
                     android:inputType="number"
                     android:text="0"
+                    android:textColor="@android:color/white"
                     android:importantForAccessibility="no" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -109,7 +129,7 @@
                 android:text="@string/reservasi_status_kuota_default"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="#555555" />
+                android:textColor="#E0E0E0" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

@@ -208,9 +208,22 @@ public class ReservasiStep2Fragment extends Fragment {
         for (View anggotaView : anggotaViews) {
             TextInputEditText etNama = anggotaView.findViewById(R.id.et_nama_pendaki);
             TextInputEditText etNik = anggotaView.findViewById(R.id.et_nik_pendaki);
-            TextInputEditText etTelp = anggotaView.findViewById(R.id.til_telepon_pendaki).findViewById(R.id.et_telepon_pendaki); // Ambil EditText di dalam TextInputLayout
-            TextInputEditText etDarurat = anggotaView.findViewById(R.id.til_darurat_pendaki).findViewById(R.id.et_darurat_pendaki);
-            TextInputEditText etAlamat = anggotaView.findViewById(R.id.til_alamat_pendaki).findViewById(R.id.et_alamat_pendaki);
+
+            // PERBAIKAN: Gunakan getEditText() dari TextInputLayout
+            com.google.android.material.textfield.TextInputLayout tilTelp = anggotaView.findViewById(R.id.til_telepon_pendaki);
+            com.google.android.material.textfield.TextInputLayout tilDarurat = anggotaView.findViewById(R.id.til_darurat_pendaki);
+            com.google.android.material.textfield.TextInputLayout tilAlamat = anggotaView.findViewById(R.id.til_alamat_pendaki);
+
+            TextInputEditText etTelp = (TextInputEditText) tilTelp.getEditText();
+            TextInputEditText etDarurat = (TextInputEditText) tilDarurat.getEditText();
+            TextInputEditText etAlamat = (TextInputEditText) tilAlamat.getEditText();
+
+            // Pastikan EditText tidak null sebelum digunakan
+            if (etNama == null || etNik == null || etTelp == null || etDarurat == null || etAlamat == null) {
+                Log.e("Step2", "Salah satu EditText di item_pendaki.xml null!");
+                Toast.makeText(getContext(), "Terjadi error internal pada form.", Toast.LENGTH_SHORT).show();
+                return false; // Hentikan proses jika ada error
+            }
 
             String nama = etNama.getText().toString();
             String nik = etNik.getText().toString();

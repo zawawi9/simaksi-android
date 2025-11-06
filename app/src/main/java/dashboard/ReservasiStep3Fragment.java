@@ -30,9 +30,11 @@ import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Reservasi;
 import FITURLOGIN.SessionManager;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -108,10 +110,16 @@ public class ReservasiStep3Fragment extends Fragment {
         String tanggal = viewModel.tanggalMasuk.getValue();
         int jumlah = viewModel.jumlahPendaki.getValue();
         int total = viewModel.totalHarga.getValue();
+
+        Locale localeID = new Locale("in", "ID");
+        NumberFormat formatRupiah = NumberFormat.getCurrencyInstance(localeID);
+        formatRupiah.setMaximumFractionDigits(0);
+        String totalFormatted = formatRupiah.format(total);
+
         String detail = "Tanggal Masuk: " + tanggal + "\n" +
                 "Jumlah Pendaki: " + jumlah + " orang";
         tvRingkasanDetail.setText(detail);
-        tvRingkasanTotal.setText("Total: Rp " + total);
+        tvRingkasanTotal.setText("Total: " + totalFormatted);
     }
 
     private boolean validateAndSaveBarang() {
