@@ -96,10 +96,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
-                    android:focusable="false"
                     android:inputType="number"
                     android:text="0"
-                    android:cursorVisible="false"
                     android:importantForAccessibility="no" />
             </com.google.android.material.textfield.TextInputLayout>
 

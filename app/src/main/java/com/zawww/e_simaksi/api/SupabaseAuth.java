@@ -262,12 +262,22 @@ public class SupabaseAuth {
     }
 
     public static void getJadwalAktif(String idPengguna, JadwalCallback callback) {
+        // 1. Dapatkan tanggal hari ini
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String todayString = today.format(formatter);
+
+        // 2. Buat query yang benar
         String idQuery = "eq." + idPengguna;
-        String statusQuery = "eq.terkonfirmasi"; // Hanya ambil yang sudah terkonfirmasi
-        // Ambil data ringkas saja
+        // Ambil jadwal yang statusnya menunggu pembayaran ATAU sudah terkonfirmasi
+        String statusQuery = "in.(menunggu_pembayaran,terkonfirmasi)";
+        // Ambil jadwal yang tanggalnya hari ini ATAU di masa depan
+        String tanggalQuery = "gte." + todayString;
+
         String querySelect = "id_reservasi,tanggal_pendakian,kode_reservasi,jumlah_pendaki";
 
-        reservasiService.getJadwalAktif(idQuery, statusQuery, querySelect, "tanggal_pendakian.asc", 1)
+        // Panggil service dengan query yang sudah diperbaiki
+        reservasiService.getJadwalAktif(idQuery, statusQuery, tanggalQuery, querySelect, "tanggal_pendakian.asc", 1)
                 .enqueue(new Callback<List<Reservasi>>() {
                     @Override
                     public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
@@ -281,7 +291,13 @@ public class SupabaseAuth {
                                 callback.onError("Tidak ada jadwal aktif.");
                             } else {
                                 // Ini baru error server
-                                callback.onError("Gagal mengambil jadwal: " + response.message());
+                                try {
+                                    String errBody = response.errorBody() != null ? response.errorBody().string() : response.message();
+                                    Log.e("SupabaseAuth", "Gagal mengambil jadwal: " + errBody);
+                                    callback.onError("Gagal mengambil jadwal: " + errBody);
+                                } catch (java.io.IOException e) {
+                                    callback.onError("Gagal mengambil jadwal: " + e.getMessage());
+                                }
                             }
                         }
                     }
@@ -536,6 +552,7 @@ public class SupabaseAuth {
         Call<List<Reservasi>> getJadwalAktif(
                 @Query("id_pengguna") String idPenggunaQuery,
                 @Query("status") String statusQuery,
+                @Query("tanggal_pendakian") String tanggalPendakianQuery,
                 @Query("select") String select,
                 @Query("order") String order,
                 @Query("limit") int limit
