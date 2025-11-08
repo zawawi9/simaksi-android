@@ -37,10 +37,7 @@ public class ReservasiFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Sembunyikan BottomNav
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showBottomNav(false);
-        }
+
 
         viewModel = new ViewModelProvider(this).get(ReservasiSharedViewModel.class);
         btnKembali = view.findViewById(R.id.btn_kembali);
@@ -75,24 +72,12 @@ public class ReservasiFragment extends Fragment {
                 btnLanjut.setEnabled(isValid);
             }
         });
-
-        // MENANGANI EDGE-TO-EDGE UNTUK TOMBOL NAVIGASI
-        View navButtonsLayout = view.findViewById(R.id.nav_buttons_layout);
-        ViewCompat.setOnApplyWindowInsetsListener(navButtonsLayout, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            // Terapkan tinggi system navigation bar sebagai padding bawah
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-            return insets;
-        });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Tampilkan lagi BottomNav saat kembali
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showBottomNav(true);
-        }
+
     }
 
     private void setupButtonListeners() {

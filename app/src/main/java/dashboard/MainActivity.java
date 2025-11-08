@@ -130,6 +130,17 @@ public class MainActivity extends AppCompatActivity {
             return true; // Berhasil, item dipilih
         });
 
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+            if (currentFragment instanceof HomeFragment ||
+                currentFragment instanceof TransaksiFragment ||
+                currentFragment instanceof HubungiKamiFragment) {
+                showBottomNav(true);
+            } else {
+                showBottomNav(false);
+            }
+        });
+
         // PERBAIKAN PALING PENTING:
         // Muat HomeFragment secara default saat activity pertama kali dibuka.
         if (savedInstanceState == null) {
@@ -226,6 +237,15 @@ public class MainActivity extends AppCompatActivity {
         if (bottomNavigationView != null) {
             bottomNavigationView.setVisibility(show ? View.VISIBLE : View.GONE);
         }
+        if (swipeRefreshLayout != null) {
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) swipeRefreshLayout.getLayoutParams();
+            if (show) {
+                params.bottomMargin = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);
+            } else {
+                params.bottomMargin = 0;
+            }
+            swipeRefreshLayout.setLayoutParams(params);
+        }
     }
 
     // Metode untuk mendapatkan posisi navigasi berdasarkan ID
@@ -244,5 +264,16 @@ public class MainActivity extends AppCompatActivity {
     }
     public SwipeRefreshLayout getSwipeRefreshLayout() {
         return swipeRefreshLayout;
+    }
+
+    public void navigateToFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        // Standard slide-in animation
+        fragmentTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right);
+        fragmentTransaction.replace(R.id.fragment_container, fragment);
+        fragmentTransaction.addToBackStack(null); // Add this transaction to the back stack
+        fragmentTransaction.commit();
     }
 }

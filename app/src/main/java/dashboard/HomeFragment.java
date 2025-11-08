@@ -85,17 +85,18 @@ public class HomeFragment extends Fragment {
         tvJumlahPendaki = view.findViewById(R.id.tv_jumlah_pendaki);
         btnLihatDetail = view.findViewById(R.id.btn_lihat_detail);
         CardView cardPesanTiket = view.findViewById(R.id.card_pesan_tiket);
+        CardView cardCuaca = view.findViewById(R.id.card_cuaca);
+
+        cardCuaca.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToFragment(new com.zawww.e_simaksi.ui.weather.WeatherFragment());
+            }
+        });
 
         cardPesanTiket.setOnClickListener(v -> {
-
-            // 3. Buat instance Fragment reservasi
-            ReservasiFragment reservasiFragment = new ReservasiFragment();
-
-            // 4. Lakukan Fragment Transaction
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.main, reservasiFragment)
-                    .addToBackStack(null)
-                    .commit();
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToFragment(new ReservasiFragment());
+            }
         });
 
         // --- Setup Adapter Slider ---
