@@ -20,6 +20,7 @@ android {
         // Define BuildConfig fields for Supabase configuration
         buildConfigField("String", "SUPABASE_URL", "\"${project.findProperty("SUPABASE_URL") ?: ""}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${project.findProperty("SUPABASE_ANON_KEY") ?: ""}\"")
+        buildConfigField("String", "OPEN_WEATHER_MAP_API_KEY", "\"${project.findProperty("OPEN_WEATHER_MAP_API_KEY") ?: ""}\"")
     }
 
     buildTypes {

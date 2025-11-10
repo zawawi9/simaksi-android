@@ -33,46 +33,26 @@
             app:tint="@android:color/black"
             tools:src="@drawable/ic_weather_cloudy" />
 
-                <TextView
+        <TextView
+            android:id="@+id/tv_temperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            tools:text="28°/15°" />
 
-                    android:id="@+id/tv_temperature"
+        <TextView
+            android:id="@+id/tv_weather_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/black"
+            android:textSize="12sp"
+            tools:text="Berawan" />
 
-                    android:layout_width="wrap_content"
+    </LinearLayout>
 
-                    android:layout_height="wrap_content"
-
-                    android:layout_marginTop="8dp"
-
-                    android:textSize="14sp"
-
-                    android:textColor="@android:color/black"
-
-                    tools:text="28°/15°" />
-
-        
-
-                <TextView
-
-                    android:id="@+id/tv_weather_description"
-
-                    android:layout_width="wrap_content"
-
-                    android:layout_height="wrap_content"
-
-                    android:layout_marginTop="4dp"
-
-                    android:textColor="@android:color/black"
-
-                    android:textSize="12sp"
-
-                    tools:text="Berawan" />
-
-        
-
-            </LinearLayout>
-
-        
-
-        </androidx.cardview.widget.CardView>
+</androidx.cardview.widget.CardView>
 
         
