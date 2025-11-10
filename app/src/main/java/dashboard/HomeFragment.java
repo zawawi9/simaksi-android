@@ -2,6 +2,7 @@ package dashboard;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -86,6 +87,12 @@ public class HomeFragment extends Fragment {
         btnLihatDetail = view.findViewById(R.id.btn_lihat_detail);
         CardView cardPesanTiket = view.findViewById(R.id.card_pesan_tiket);
         CardView cardCuaca = view.findViewById(R.id.card_cuaca);
+        CardView cardLokasi = view.findViewById(R.id.card_lokasi);
+
+        cardLokasi.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), LokasiActivity.class);
+            startActivity(intent);
+        });
 
         cardCuaca.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {

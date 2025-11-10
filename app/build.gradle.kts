@@ -82,4 +82,7 @@ dependencies {
 // UNTUK UPLOAD FILE: Diperlukan oleh SupabaseAuth
 // Retrofit tidak menyertakannya secara default
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    // OpenStreetMap alternative
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
 }

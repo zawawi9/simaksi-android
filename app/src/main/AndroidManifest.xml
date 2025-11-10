@@ -7,6 +7,15 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
+    <!-- Permissions for Google Maps -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Declare intent to query Google Maps package -->
+    <queries>
+        <package android:name="com.google.android.apps.maps" />
+    </queries>
+
     <application
         android:name=".EsimaksiApplication"
         android:allowBackup="true"
@@ -17,8 +26,12 @@
         android:roundIcon="@drawable/ic_simaksi_launch"
         android:supportsRtl="true"
         android:theme="@style/Theme.ESIMAKSI">
+
         <activity
             android:name="dashboard.MainActivity"
+            android:exported="false" />
+        <activity
+            android:name="dashboard.LokasiActivity"
             android:exported="false" />
         <activity
             android:name="FITURLOGIN.RegisterActivity"
