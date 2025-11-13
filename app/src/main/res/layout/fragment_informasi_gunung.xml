@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="#FAFAFA"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Konten dapat digulir -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -28,15 +28,27 @@
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/header_background"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:src="@drawable/header_background" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="#FFFFF" />
+                <ImageView
+                    android:id="@+id/icon_notif"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="36dp"
+                    android:layout_marginEnd="45dp"
+                    android:src="@drawable/ic_notification"
+                    app:tint="#FFFFFF" />
+
+                <ImageView
+                    android:id="@+id/icon_cart"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="36dp"
+                    android:layout_marginEnd="15dp"
+                    android:src="@drawable/ic_cart"
+                    app:tint="#FFFFFF" />
 
                 <ImageView
                     android:id="@+id/logo"
@@ -45,13 +57,12 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="36dp"
                     android:adjustViewBounds="true"
-                    android:src="@drawable/img_1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:src="@drawable/img_1" />
             </FrameLayout>
 
-            <!-- Card Status Gunung -->
+            <!-- CARD STATUS GUNUNG -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardStatusGunung"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -111,143 +122,17 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Info Cuaca, Suhu, Air -->
-            <LinearLayout
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:weightSum="3"
-                android:layout_marginTop="16dp"
+            <!-- MAP VIEW PETA RUTE PENDAKIAN -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/mapView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp">
+                android:layout_height="250dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginHorizontal="16dp"
+                android:background="#E0E0E0"
+                android:clipToOutline="true" />
 
-                <!-- Card Cuaca -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="3dp"
-                    app:cardBackgroundColor="#E8F5E9">
-
-                    <LinearLayout
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_sunny"
-                            app:tint="#4CAF50" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/tvCuaca"
-                            android:text="Cerah"
-                            android:textColor="#2E7D32"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_marginTop="4dp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Cuaca Puncak"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Card Suhu -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="3dp"
-                    app:cardBackgroundColor="#E3F2FD">
-
-                    <LinearLayout
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_thermometer"
-                            app:tint="#2196F3" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/tvSuhu"
-                            android:text="16°C"
-                            android:textColor="#0D47A1"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_marginTop="4dp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Suhu"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Card Air -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="3dp"
-                    app:cardBackgroundColor="#FFF3E0">
-
-                    <LinearLayout
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_water"
-                            app:tint="#FB8C00" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/tvAir"
-                            android:text="Aman"
-                            android:textColor="#E65100"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_marginTop="4dp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Air"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- Tombol -->
+            <!-- TOMBOL AKSI -->
             <LinearLayout
                 android:orientation="horizontal"
                 android:gravity="center"
@@ -282,7 +167,7 @@
                     app:iconPadding="8dp" />
             </LinearLayout>
 
-            <!-- RecyclerView -->
+            <!-- DAFTAR JALUR -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvJalur"
                 android:layout_width="match_parent"
@@ -292,5 +177,4 @@
                 android:paddingHorizontal="16dp" />
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

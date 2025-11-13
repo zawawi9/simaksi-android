@@ -73,6 +73,7 @@ dependencies {
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
 // WAJIB: Untuk LiveData (MutableLiveData)
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
 // WAJIB: Untuk Fragment (Fragment, getChildFragmentManager)
