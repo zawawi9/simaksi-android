@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;

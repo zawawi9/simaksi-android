@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.ui.fragment;
 
 import android.app.Activity;
 import android.content.Context;
@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import com.zawww.e_simaksi.viewmodel.ReservasiSharedViewModel;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.zawww.e_simaksi.R;

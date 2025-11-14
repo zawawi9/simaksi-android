@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,8 +22,12 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.zawww.e_simaksi.R;
 
-import FITURLOGIN.SessionManager;
-import FITURLOGIN.TampilanPertamaActivity;
+import com.zawww.e_simaksi.util.SessionManager;
+import com.zawww.e_simaksi.ui.activity.TampilanPertamaActivity;
+import com.zawww.e_simaksi.ui.fragment.HomeFragment;
+import com.zawww.e_simaksi.ui.fragment.HubungiKamiFragment;
+import com.zawww.e_simaksi.ui.fragment.ReservasiFragment;
+import com.zawww.e_simaksi.ui.fragment.TransaksiFragment;
 
 public class MainActivity extends AppCompatActivity {
 

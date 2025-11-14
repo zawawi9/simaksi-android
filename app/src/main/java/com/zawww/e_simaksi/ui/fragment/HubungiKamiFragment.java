@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.ui.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

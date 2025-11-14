@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.ui.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,7 +17,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.zawww.e_simaksi.R;
-import dashboard.MainActivity; // Import MainActivity Anda
+import com.zawww.e_simaksi.ui.activity.MainActivity; // Import MainActivity Anda
+import com.zawww.e_simaksi.viewmodel.ReservasiSharedViewModel;
+import com.zawww.e_simaksi.ui.fragment.ReservasiStep1Fragment;
+import com.zawww.e_simaksi.ui.fragment.ReservasiStep2Fragment;
+import com.zawww.e_simaksi.ui.fragment.ReservasiStep3Fragment;
 
 public class ReservasiFragment extends Fragment {
 

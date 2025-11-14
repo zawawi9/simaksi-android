@@ -1,4 +1,4 @@
-package FITURLOGIN;
+package com.zawww.e_simaksi.model;
 
 public class User {
     private String email;

@@ -1,4 +1,4 @@
-package FITURLOGIN;
+package com.zawww.e_simaksi.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,7 +7,9 @@ import android.os.Handler;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.zawww.e_simaksi.R;
-import dashboard.MainActivity;
+import com.zawww.e_simaksi.ui.activity.MainActivity;
+import com.zawww.e_simaksi.util.SessionManager;
+import com.zawww.e_simaksi.ui.activity.TampilanPertamaActivity;
 
 public class SplashScreenActivity extends AppCompatActivity {
 

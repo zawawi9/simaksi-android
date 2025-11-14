@@ -28,19 +28,19 @@
         android:theme="@style/Theme.ESIMAKSI">
 
         <activity
-            android:name="dashboard.MainActivity"
+            android:name="com.zawww.e_simaksi.ui.activity.MainActivity"
             android:exported="false" />
         <activity
-            android:name="dashboard.LokasiActivity"
+            android:name="com.zawww.e_simaksi.ui.activity.LokasiActivity"
             android:exported="false" />
         <activity
-            android:name="FITURLOGIN.RegisterActivity"
+            android:name="com.zawww.e_simaksi.ui.activity.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name="FITURLOGIN.TampilanPertamaActivity"
+            android:name="com.zawww.e_simaksi.ui.activity.TampilanPertamaActivity"
             android:exported="false" />
         <activity
-            android:name="FITURLOGIN.SplashScreenActivity"
+            android:name="com.zawww.e_simaksi.ui.activity.SplashScreenActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,7 +49,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="FITURLOGIN.LoginActivity"
+            android:name="com.zawww.e_simaksi.ui.activity.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

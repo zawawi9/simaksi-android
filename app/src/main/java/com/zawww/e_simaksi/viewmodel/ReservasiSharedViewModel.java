@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.viewmodel;
 
 import android.net.Uri;
 import androidx.lifecycle.LiveData;

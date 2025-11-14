@@ -1,4 +1,4 @@
-package FITURLOGIN;
+package com.zawww.e_simaksi.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;

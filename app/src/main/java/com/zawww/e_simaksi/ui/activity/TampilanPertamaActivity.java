@@ -1,4 +1,4 @@
-package FITURLOGIN;
+package com.zawww.e_simaksi.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,7 +12,10 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.zawww.e_simaksi.R;
-import dashboard.MainActivity;
+import com.zawww.e_simaksi.ui.activity.MainActivity;
+import com.zawww.e_simaksi.util.SessionManager;
+import com.zawww.e_simaksi.ui.activity.LoginActivity;
+import com.zawww.e_simaksi.ui.activity.RegisterActivity;
 
 public class TampilanPertamaActivity extends AppCompatActivity {
 

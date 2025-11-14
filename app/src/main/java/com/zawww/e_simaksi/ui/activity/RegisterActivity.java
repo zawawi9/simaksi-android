@@ -1,4 +1,4 @@
-package FITURLOGIN;
+package com.zawww.e_simaksi.ui.activity;
 
 import android.os.Bundle;
 import android.util.Patterns;

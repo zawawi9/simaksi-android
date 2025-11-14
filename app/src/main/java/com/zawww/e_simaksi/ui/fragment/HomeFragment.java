@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.ui.fragment;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -31,8 +31,11 @@ import com.zawww.e_simaksi.model.BarangBawaanSampah;
 import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
-import FITURLOGIN.SessionManager;
-import dashboard.ReservasiFragment;
+import com.zawww.e_simaksi.util.SessionManager;
+import com.zawww.e_simaksi.ui.fragment.ReservasiFragment;
+import com.zawww.e_simaksi.adapter.PromosiSliderAdapter;
+import com.zawww.e_simaksi.ui.activity.LokasiActivity;
+import com.zawww.e_simaksi.ui.activity.MainActivity;
 
 import java.util.ArrayList;
 import java.util.List;

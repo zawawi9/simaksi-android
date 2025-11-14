@@ -1,4 +1,4 @@
-package FITURLOGIN;
+package com.zawww.e_simaksi.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,8 +19,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
+import com.zawww.e_simaksi.util.SessionManager;
 
-import dashboard.MainActivity;
+import com.zawww.e_simaksi.ui.activity.MainActivity;
 
 public class LoginActivity extends AppCompatActivity {
 

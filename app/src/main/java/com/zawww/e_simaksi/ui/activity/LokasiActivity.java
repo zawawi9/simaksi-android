@@ -1,4 +1,4 @@
-package dashboard;
+package com.zawww.e_simaksi.ui.activity;
 
 import android.Manifest;
 import android.content.Intent;
