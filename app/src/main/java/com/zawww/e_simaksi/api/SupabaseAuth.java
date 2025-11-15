@@ -641,7 +641,7 @@ public class SupabaseAuth {
                 "Prefer: return=minimal" // Tidak perlu data kembali
         })
         @PATCH("rest/v1/profiles")
-        Call<Void> updateProfile(
+        Call<Void> updateProfileFields(
                 @Header("Authorization") String bearerToken, // Token pengguna
                 @Query("id") String userId, // Filter "eq.USER_UUID"
                 @Body Map<String, Object> profileData // Kirim Map untuk update
@@ -824,7 +824,7 @@ public class SupabaseAuth {
         String bearerToken = "Bearer " + accessToken;
         String userIdFilter = "eq." + userId;
 
-        profileService.updateProfile(bearerToken, userIdFilter, updates).enqueue(new Callback<Void>() {
+        profileService.updateProfileFields(bearerToken, userIdFilter, updates).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
