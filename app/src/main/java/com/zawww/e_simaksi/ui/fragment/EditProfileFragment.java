@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.zawww.e_simaksi.R;
@@ -79,7 +78,7 @@ public class EditProfileFragment extends Fragment {
     }
 
     private void setupListeners() {
-        btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
         etTanggalLahir.setOnClickListener(v -> showDatePickerDialog());
 
@@ -140,9 +139,11 @@ public class EditProfileFragment extends Fragment {
             public void onSuccess() {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
-                    showLoading(false);
-                    Toast.makeText(getContext(), "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show();
-                    NavHostFragment.findNavController(EditProfileFragment.this).navigateUp();
+                    if (isAdded()) {
+                        showLoading(false);
+                        Toast.makeText(getContext(), "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show();
+                        requireActivity().getSupportFragmentManager().popBackStack();
+                    }
                 });
             }
 
@@ -150,8 +151,10 @@ public class EditProfileFragment extends Fragment {
             public void onError(String errorMessage) {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
-                    showLoading(false);
-                    Toast.makeText(getContext(), "Gagal memperbarui profil: " + errorMessage, Toast.LENGTH_LONG).show();
+                    if (isAdded()) {
+                        showLoading(false);
+                        Toast.makeText(getContext(), "Gagal memperbarui profil: " + errorMessage, Toast.LENGTH_LONG).show();
+                    }
                 });
             }
         });

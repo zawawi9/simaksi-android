@@ -634,6 +634,13 @@ public class SupabaseAuth {
                 @Query("select") String select
         );
 
+        @PATCH("rest/v1/profiles")
+        Call<Void> updateProfile(
+                @Header("Authorization") String bearerToken, // Token pengguna
+                @Query("id") String userId, // Filter "eq.USER_UUID"
+                @Body Profile profileData // Kirim POJO Profile
+        );
+
         // --- METODE BARU ---
         @Headers({
                 "Content-Type: application/json",

@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.zawww.e_simaksi.R;
@@ -55,7 +54,7 @@ public class UbahPasswordFragment extends Fragment {
     }
 
     private void setupListeners() {
-        btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
         btnKirimTautan.setOnClickListener(v -> {
             sendPasswordResetLink();
@@ -94,7 +93,7 @@ public class UbahPasswordFragment extends Fragment {
                 .setMessage("Tautan untuk mengatur ulang kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk Anda.")
                 .setPositiveButton("OK", (dialog, which) -> {
                     dialog.dismiss();
-                    NavHostFragment.findNavController(UbahPasswordFragment.this).navigateUp();
+                    requireActivity().getSupportFragmentManager().popBackStack();
                 })
                 .show();
     }
