@@ -1,7 +1,6 @@
 package com.zawww.e_simaksi.ui.fragment;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,9 +31,7 @@ import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
 import com.zawww.e_simaksi.util.SessionManager;
-import com.zawww.e_simaksi.ui.fragment.ReservasiFragment;
 import com.zawww.e_simaksi.adapter.PromosiSliderAdapter;
-import com.zawww.e_simaksi.ui.activity.LokasiActivity;
 import com.zawww.e_simaksi.ui.activity.MainActivity;
 
 import java.util.ArrayList;
@@ -93,8 +90,9 @@ public class HomeFragment extends Fragment {
         CardView cardLokasi = view.findViewById(R.id.card_lokasi);
 
         cardLokasi.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), LokasiActivity.class);
-            startActivity(intent);
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToFragment(new com.zawww.e_simaksi.ui.fragment.LokasiFragment());
+            }
         });
 
         cardCuaca.setOnClickListener(v -> {

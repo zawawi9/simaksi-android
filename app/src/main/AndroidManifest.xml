@@ -31,9 +31,6 @@
             android:name="com.zawww.e_simaksi.ui.activity.MainActivity"
             android:exported="false" />
         <activity
-            android:name="com.zawww.e_simaksi.ui.activity.LokasiActivity"
-            android:exported="false" />
-        <activity
             android:name="com.zawww.e_simaksi.ui.activity.RegisterActivity"
             android:exported="false" />
         <activity

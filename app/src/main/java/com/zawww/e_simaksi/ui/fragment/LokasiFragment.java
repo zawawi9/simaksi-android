@@ -1,4 +1,4 @@
-package com.zawww.e_simaksi.ui.activity;
+package com.zawww.e_simaksi.ui.fragment;
 
 import android.Manifest;
 import android.content.Intent;
@@ -6,16 +6,16 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-
-import androidx.core.view.WindowCompat;
+import androidx.fragment.app.Fragment; // Changed from AppCompatActivity
 
 import com.zawww.e_simaksi.R;
 
@@ -29,36 +29,35 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Locale;
 
-public class LokasiActivity extends AppCompatActivity {
+public class LokasiFragment extends Fragment { // Changed from AppCompatActivity
 
     private MapView mMapView;
     private MyLocationNewOverlay mLocationOverlay;
-    private final GeoPoint basecampKucur = new GeoPoint(-7.923, 112.516); // Koordinat Basecamp Kucur
+    // Updated coordinates
+    private final GeoPoint basecampKucur = new GeoPoint(-7.9659126, 112.54681);
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.activity_lokasi, container, false);
 
         // Essential osmdroid configuration
-        Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        // Use requireContext() for Fragment context
+        Configuration.getInstance().load(requireContext(), PreferenceManager.getDefaultSharedPreferences(requireContext()));
 
-        setContentView(R.layout.activity_lokasi);
+        return view;
+    }
 
-        // Set status bar icons to dark for better visibility on light backgrounds
-        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightStatusBars(true);
-
-        // Setup Toolbar
-        Toolbar toolbar = findViewById(R.id.toolbar_lokasi);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-        }
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         // Initialize MapView
-        mMapView = findViewById(R.id.map);
+        mMapView = view.findViewById(R.id.map); // Use fragment's view
         mMapView.setTileSource(TileSourceFactory.MAPNIK); // Standard tile source
         mMapView.setMultiTouchControls(true);
 
@@ -77,32 +76,34 @@ public class LokasiActivity extends AppCompatActivity {
         checkAndRequestLocationPermissions();
 
         // Setup Navigation Button
-        Button btnNavigasi = findViewById(R.id.btn_mulai_navigasi);
+        Button btnNavigasi = view.findViewById(R.id.btn_mulai_navigasi); // Use fragment's view
         btnNavigasi.setOnClickListener(v -> {
             String uriString = String.format(Locale.ENGLISH, "google.navigation:q=%f,%f", basecampKucur.getLatitude(), basecampKucur.getLongitude());
             Uri gmmIntentUri = Uri.parse(uriString);
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
-            if (mapIntent.resolveActivity(getPackageManager()) != null) {
+            if (mapIntent.resolveActivity(requireContext().getPackageManager()) != null) { // Use requireContext()
                 startActivity(mapIntent);
             } else {
-                Toast.makeText(this, "Aplikasi Google Maps tidak ditemukan. Silakan install terlebih dahulu.", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), "Aplikasi Google Maps tidak ditemukan. Silakan install terlebih dahulu.", Toast.LENGTH_LONG).show(); // Use requireContext()
             }
         });
     }
 
     private void checkAndRequestLocationPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Use Fragment's requestPermissions
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         } else {
             enableMyLocation();
         }
     }
 
     private void enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (mMapView != null) {
-                mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), mMapView);
+                // Use requireContext() for GpsMyLocationProvider
+                mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(requireContext()), mMapView);
                 mLocationOverlay.enableMyLocation();
                 mMapView.getOverlays().add(mLocationOverlay);
             }
@@ -116,13 +117,13 @@ public class LokasiActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 enableMyLocation();
             } else {
-                Toast.makeText(this, "Izin lokasi ditolak. Fitur 'My Location' tidak akan aktif.", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), "Izin lokasi ditolak. Fitur 'My Location' tidak akan aktif.", Toast.LENGTH_LONG).show(); // Use requireContext()
             }
         }
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         // This is important for osmdroid's lifecycle
         if (mMapView != null) {
@@ -131,7 +132,7 @@ public class LokasiActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         // This is important for osmdroid's lifecycle
         if (mMapView != null) {

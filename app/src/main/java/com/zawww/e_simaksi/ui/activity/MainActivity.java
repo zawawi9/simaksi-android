@@ -29,6 +29,9 @@ import com.zawww.e_simaksi.ui.fragment.HubungiKamiFragment;
 import com.zawww.e_simaksi.ui.fragment.ReservasiFragment;
 import com.zawww.e_simaksi.ui.fragment.TransaksiFragment;
 
+// [BARU] Impor ProfileFragment yang sudah kita buat
+import com.zawww.e_simaksi.ui.fragment.ProfileFragment;
+
 public class MainActivity extends AppCompatActivity {
 
     BottomNavigationView bottomNavigationView;
@@ -64,22 +67,12 @@ public class MainActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            // Ambil layout params (aturan tata letak) dari view
             ViewGroup.LayoutParams params = v.getLayoutParams();
-
-            // Pastikan itu adalah MarginLayoutParams (biar kita bisa set margin)
             if (params instanceof ViewGroup.MarginLayoutParams) {
                 ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) params;
-
-                // Set MARGIN BAWAH seukuran tinggi tombol navigasi
                 marginParams.bottomMargin = systemBars.bottom;
-
-                // Terapkan kembali layout params yang sudah diubah
                 v.setLayoutParams(marginParams);
             }
-
-            // Kembalikan insets aslinya
             return insets;
         });
 
@@ -87,28 +80,20 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             int currentPosition = getPositionById(itemId);
-
-            // Tentukan arah animasi berdasarkan posisi sebelumnya dan sekarang
             int enterAnim, exitAnim, popEnterAnim, popExitAnim;
 
             if (currentPosition > previousPosition) {
-                // Berpindah ke kanan (misal: Beranda -> Transaksi)
                 enterAnim = R.anim.slide_in_right;
                 exitAnim = R.anim.slide_out_left;
                 popEnterAnim = R.anim.slide_in_left;
                 popExitAnim = R.anim.slide_out_right;
             } else if (currentPosition < previousPosition) {
-                // Berpindah ke kiri (misal: Transaksi -> Beranda)
                 enterAnim = R.anim.slide_in_left;
                 exitAnim = R.anim.slide_out_right;
                 popEnterAnim = R.anim.slide_in_right;
                 popExitAnim = R.anim.slide_out_left;
             } else {
-                // Jika sama atau tidak ada perubahan posisi, gunakan default
-                enterAnim = R.anim.slide_in_right;
-                exitAnim = R.anim.slide_out_left;
-                popEnterAnim = R.anim.slide_in_left;
-                popExitAnim = R.anim.slide_out_right;
+                return false;
             }
 
             // Update posisi sebelumnya
@@ -122,9 +107,10 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_hubungi) {
                 selectedFragment = new HubungiKamiFragment();
             } else if (itemId == R.id.nav_profil) {
-                // Tambahkan fungsi logout di sini atau navigasi ke profil
-                showLogoutDialog();
-                return true; // Berhasil, item dipilih
+                // [PERBAIKAN] Arahkan ke ProfileFragment
+                selectedFragment = new ProfileFragment();
+                // showLogoutDialog(); // Dihapus dari sini
+                // return true; // Dihapus dari sini
             }
 
             if (selectedFragment != null) {
@@ -136,9 +122,11 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportFragmentManager().addOnBackStackChangedListener(() -> {
             Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+            // [DIUBAH] Tambahkan ProfileFragment ke daftar
             if (currentFragment instanceof HomeFragment ||
-                currentFragment instanceof TransaksiFragment ||
-                currentFragment instanceof HubungiKamiFragment) {
+                    currentFragment instanceof TransaksiFragment ||
+                    currentFragment instanceof HubungiKamiFragment ||
+                    currentFragment instanceof ProfileFragment) { // <-- Tambahkan ini
                 showBottomNav(true);
             } else {
                 showBottomNav(false);
@@ -159,16 +147,10 @@ public class MainActivity extends AppCompatActivity {
                 Fragment currentFragment = supportFm.findFragmentById(R.id.fragment_container);
                 if (currentFragment instanceof ReservasiFragment &&
                         currentFragment.getChildFragmentManager().getBackStackEntryCount() > 0) {
-
-                    // JANGAN keluar. Biarkan ReservasiFragment menangani tombol kembali
                     currentFragment.getChildFragmentManager().popBackStack();
-
                 } else if (supportFm.getBackStackEntryCount() > 0) {
-                    // Jika ini fragment lain (bukan Home), kembali ke Home
                     supportFm.popBackStack();
-
                 } else {
-                    // Jika kita sudah di Home, baru jalankan logic keluar aplikasi
                     if (backPressedTime + 2000 > System.currentTimeMillis()) {
                         finish(); // Keluar dari aplikasi
                     } else {
@@ -181,63 +163,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSwipeRefresh() {
-        // Setup custom refresh animation
+        // ... (Kode Anda yang ada tetap sama)
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Show custom refresh animation
             showCustomRefreshAnimation();
-
-            // Simulate data refresh (replace with actual data refresh logic)
             new Handler().postDelayed(() -> {
-                // Stop the refresh animation
                 swipeRefreshLayout.setRefreshing(false);
-
-                // Optional: Show success message
                 Toast.makeText(this, "Data diperbarui", Toast.LENGTH_SHORT).show();
-            }, 2000); // Simulate 2 seconds refresh time
+            }, 2000);
         });
-
-        // Customize the default SwipeRefreshLayout colors
         swipeRefreshLayout.setColorSchemeColors(
                 getResources().getColor(R.color.hijau_tua_brand)
         );
     }
 
     private void showCustomRefreshAnimation() {
-        // The Lottie animation will automatically play when setRefreshing(true) is called
-        // The default animation will be replaced with our custom one
+        // ... (Kode Anda yang ada tetap sama)
     }
 
-    // Metode untuk memuat fragment dengan animasi arah yang sesuai
     private void loadFragmentWithDirection(Fragment fragment, int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim) {
+        // ... (Kode Anda yang ada tetap sama)
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        // Set animasi berdasarkan arah navigasi
         fragmentTransaction.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim);
         fragmentTransaction.replace(R.id.fragment_container, fragment);
         fragmentTransaction.commit();
     }
 
-    private void showLogoutDialog() {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Logout")
-                .setMessage("Apakah Anda yakin ingin logout?")
-                .setPositiveButton("Logout", (dialog, which) -> {
-                    // Logout user
-                    sessionManager.logoutUser();
-                    Toast.makeText(this, "Berhasil logout", Toast.LENGTH_SHORT).show();
-
-                    // Kembali ke halaman login
-                    Intent intent = new Intent(MainActivity.this, TampilanPertamaActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    finish();
-                })
-                .setNegativeButton("Batal", (dialog, which) -> dialog.dismiss())
-                .show();
-    }
+    // [DIHAPUS] Metode showLogoutDialog() dipindahkan ke ProfileFragment.java
+    // private void showLogoutDialog() { ... }
 
     public void showBottomNav(boolean show) {
+        // ... (Kode Anda yang ada tetap sama)
         if (bottomNavigationView != null) {
             bottomNavigationView.setVisibility(show ? View.VISIBLE : View.GONE);
         }
@@ -252,32 +208,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Metode untuk mendapatkan posisi navigasi berdasarkan ID
     private int getPositionById(int itemId) {
+        // ... (Kode Anda yang ada tetap sama)
         if (itemId == R.id.nav_beranda) {
-            return 0; // Beranda adalah posisi pertama (paling kiri)
+            return 0;
         } else if (itemId == R.id.nav_transaksi) {
-            return 1; // Transaksi adalah posisi kedua
+            return 1;
         } else if (itemId == R.id.nav_hubungi) {
-            return 2; // Hubungi adalah posisi ketiga
+            return 2;
         } else if (itemId == R.id.nav_profil) {
-            return 3; // Profil adalah posisi keempat (paling kanan)
+            return 3;
         } else {
             return 0;
         }
     }
     public SwipeRefreshLayout getSwipeRefreshLayout() {
+        // ... (Kode Anda yang ada tetap sama)
         return swipeRefreshLayout;
     }
 
     public void navigateToFragment(Fragment fragment) {
+        // ... (Kode Anda yang ada tetap sama)
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        // Standard slide-in animation
         fragmentTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right);
         fragmentTransaction.replace(R.id.fragment_container, fragment);
-        fragmentTransaction.addToBackStack(null); // Add this transaction to the back stack
+        fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
 }

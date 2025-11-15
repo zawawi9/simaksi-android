@@ -12,6 +12,8 @@ import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
 import com.zawww.e_simaksi.model.BarangBawaanSampah;
 import com.zawww.e_simaksi.model.PendakiRombongan;
+import com.zawww.e_simaksi.model.Profile;
+import com.zawww.e_simaksi.util.SessionManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.PATCH;
 
 public class SupabaseAuth {
 
@@ -362,7 +365,7 @@ public class SupabaseAuth {
             }
         });
     }
-    public static void uploadSuratSehatWithRefresh(Context context, FITURLOGIN.SessionManager sessionManager, Uri fileUri, String fileName, UploadCallback callback) {
+    public static void uploadSuratSehatWithRefresh(Context context, com.zawww.e_simaksi.util.SessionManager sessionManager, Uri fileUri, String fileName, UploadCallback callback) {
         String refreshToken = sessionManager.getRefreshToken();
         if (refreshToken == null) {
             callback.onError("Gagal upload: Sesi tidak valid (refresh token tidak ada).");
@@ -479,6 +482,68 @@ public class SupabaseAuth {
             }
         });
     }
+
+    public static void getProfile(String accessToken, String userId, ProfileCallback callback) {
+        String bearerToken = "Bearer " + accessToken;
+        String userIdFilter = "eq." + userId;
+
+        // Panggil service yang akan kita definisikan di bawah
+        profileService.getProfile(bearerToken, userIdFilter, "*").enqueue(new Callback<List<Profile>>() {
+            @Override
+            public void onResponse(Call<List<Profile>> call, Response<List<Profile>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    Log.d("SupabaseAuth", "✅ Berhasil mengambil profil pengguna.");
+                    callback.onSuccess(response.body().get(0));
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal mengambil profil: " + errBody);
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError("Gagal mengambil data profil: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Profile>> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi getProfile: " + t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
+    public static void updateProfile(String accessToken, String userId, Profile profileData, GeneralCallback callback) {
+        String bearerToken = "Bearer " + accessToken;
+        String userIdFilter = "eq." + userId;
+        profileData.setId(null);
+        profileData.setEmail(null); // <-- PENTING: Email TIDAK di-update
+        profileData.setPeran(null);
+
+        profileService.updateProfile(bearerToken, userIdFilter, profileData).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("SupabaseAuth", "✅ Profil berhasil diperbarui.");
+                    callback.onSuccess();
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal update profil: " + errBody);
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError("Gagal memperbarui profil: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi updateProfile: " + t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
     // ========== SERVICE TAMBAHAN ==========
     interface UserService {
         @Headers({
@@ -516,11 +581,33 @@ public class SupabaseAuth {
         @Headers({
                 "Content-Type: application/json",
                 "apikey: " + API_KEY,
-                "Authorization: Bearer " + API_KEY, // Pakai Service Key (API_KEY)
+                "Authorization: Bearer " + API_KEY, // Pakai Service Key
                 "Prefer: return=representation"
         })
         @POST("rest/v1/profiles")
         Call<JsonObject> insertProfile(@Body Map<String, Object> body);
+        @Headers({
+                "apikey: " + API_KEY
+        })
+        @GET("rest/v1/profiles")
+        Call<List<Profile>> getProfile(
+                @Header("Authorization") String bearerToken, // Token pengguna
+                @Query("id") String userId, // Filter "eq.USER_UUID"
+                @Query("select") String select
+        );
+
+        // --- METODE BARU ---
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: return=minimal" // Tidak perlu data kembali
+        })
+        @PATCH("rest/v1/profiles")
+        Call<Void> updateProfile(
+                @Header("Authorization") String bearerToken, // Token pengguna
+                @Query("id") String userId, // Filter "eq.USER_UUID"
+                @Body Profile profileData // Kirim POJO Profile
+        );
     }
 
     interface PromosiService {
@@ -702,6 +789,11 @@ public class SupabaseAuth {
 
     public interface BiayaCallback {
         void onSuccess(List<PengaturanBiaya> biayaList);
+        void onError(String errorMessage);
+    }
+
+    public interface ProfileCallback {
+        void onSuccess(Profile profile);
         void onError(String errorMessage);
     }
 
