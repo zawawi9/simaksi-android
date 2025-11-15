@@ -483,6 +483,37 @@ public class SupabaseAuth {
         });
     }
 
+    public static void sendPasswordReset(String email, UpdateCallback callback) {
+        Map<String, String> body = new HashMap<>();
+        body.put("email", email);
+
+        authService.sendPasswordReset(body).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                // Supabase returns 200 OK even if the email doesn't exist, for security reasons.
+                if (response.isSuccessful()) {
+                    Log.d("SupabaseAuth", "✅ Permintaan reset password terkirim untuk email: " + email);
+                    callback.onSuccess();
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal mengirim reset password: " + errBody);
+                        callback.onError("Gagal mengirim email: " + response.message());
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                        callback.onError("Gagal mengirim email: " + e.getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi reset password: " + t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
     public static void getProfile(String accessToken, String userId, ProfileCallback callback) {
         String bearerToken = "Bearer " + accessToken;
         String userIdFilter = "eq." + userId;
@@ -575,6 +606,13 @@ public class SupabaseAuth {
         })
         @POST("auth/v1/token?grant_type=refresh_token")
         Call<JsonObject> refreshToken(@Body Map<String, Object> body);
+
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY
+        })
+        @POST("auth/v1/recover")
+        Call<JsonObject> sendPasswordReset(@Body Map<String, String> body);
     }
 
     interface ProfileService {
@@ -606,7 +644,7 @@ public class SupabaseAuth {
         Call<Void> updateProfile(
                 @Header("Authorization") String bearerToken, // Token pengguna
                 @Query("id") String userId, // Filter "eq.USER_UUID"
-                @Body Profile profileData // Kirim POJO Profile
+                @Body Map<String, Object> profileData // Kirim Map untuk update
         );
     }
 
@@ -779,6 +817,40 @@ public class SupabaseAuth {
 
     public interface UploadCallback {
         void onSuccess(String publicUrl);
+        void onError(String errorMessage);
+    }
+
+    public static void updateProfile(String accessToken, String userId, Map<String, Object> updates, UpdateCallback callback) {
+        String bearerToken = "Bearer " + accessToken;
+        String userIdFilter = "eq." + userId;
+
+        profileService.updateProfile(bearerToken, userIdFilter, updates).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("SupabaseAuth", "✅ Profil berhasil diperbarui.");
+                    callback.onSuccess();
+                } else {
+                    try {
+                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                        Log.e("SupabaseAuth", "Gagal update profil: " + errBody);
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError("Gagal memperbarui profil: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("SupabaseAuth", "⚠️ Error koneksi updateProfile: " + t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
+    public interface UpdateCallback {
+        void onSuccess();
         void onError(String errorMessage);
     }
 

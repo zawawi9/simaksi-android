@@ -109,7 +109,13 @@ public class ProfileFragment extends Fragment {
 
         if (refreshToken == null) {
             Toast.makeText(getContext(), "Sesi tidak valid, silakan login ulang.", Toast.LENGTH_LONG).show();
-            // TODO: Arahkan ke Login
+            // Arahkan ke Login
+            Intent intent = new Intent(getActivity(), TampilanPertamaActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            if (getActivity() != null) {
+                getActivity().finish();
+            }
             return;
         }
 
@@ -168,22 +174,24 @@ public class ProfileFragment extends Fragment {
      */
     private void setupButtonListeners() {
         btnEditProfil.setOnClickListener(v -> {
-            // TODO: Navigasi ke EditProfileFragment
-            Toast.makeText(getContext(), "Navigasi ke halaman Edit Profil...", Toast.LENGTH_SHORT).show();
+            if (currentProfile != null) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("PROFIL_SAAT_INI", currentProfile);
+                EditProfileFragment editProfileFragment = new EditProfileFragment();
+                editProfileFragment.setArguments(bundle);
 
-            // if (currentProfile != null) {
-            //    Bundle bundle = new Bundle();
-            //    bundle.putSerializable("PROFIL_SAAT_INI", currentProfile);
-            //    NavHostFragment.findNavController(this).navigate(R.id.action_profileFragment_to_editProfileFragment, bundle);
-            // } else {
-            //    Toast.makeText(getContext(), "Data profil belum dimuat", Toast.LENGTH_SHORT).show();
-            // }
+                if (getActivity() instanceof com.zawww.e_simaksi.ui.activity.MainActivity) {
+                    ((com.zawww.e_simaksi.ui.activity.MainActivity) getActivity()).navigateToFragment(editProfileFragment);
+                }
+            } else {
+                Toast.makeText(getContext(), "Data profil belum dimuat", Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnUbahPassword.setOnClickListener(v -> {
-            // TODO: Navigasi ke UbahPasswordFragment
-            Toast.makeText(getContext(), "Navigasi ke Ubah Password...", Toast.LENGTH_SHORT).show();
-            // NavHostFragment.findNavController(this).navigate(R.id.action_profileFragment_to_ubahPasswordFragment);
+            if (getActivity() instanceof com.zawww.e_simaksi.ui.activity.MainActivity) {
+                ((com.zawww.e_simaksi.ui.activity.MainActivity) getActivity()).navigateToFragment(new UbahPasswordFragment());
+            }
         });
 
         // [PERBAIKAN] Panggil dialog konfirmasi saat tombol logout diklik
