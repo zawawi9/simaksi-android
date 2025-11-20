@@ -193,8 +193,22 @@ public class SupabaseAuth {
                     });
 
                 } else {
-                    Log.e("SupabaseAuth", "❌ Login gagal: " + response.message());
-                    callback.onError("Login gagal: " + response.message());
+                    String errorMessage = "Login gagal: " + response.message();
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorJson = response.errorBody().string();
+                            Log.e("SupabaseAuth", "❌ Login gagal: " + errorJson);
+                            // Cek jika error karena email belum dikonfirmasi
+                            if (errorJson.contains("Email not confirmed")) {
+                                errorMessage = "Email belum terverifikasi. Silakan cek email Anda.";
+                            }
+                        } else {
+                             Log.e("SupabaseAuth", "❌ Login gagal: " + response.message());
+                        }
+                    } catch (Exception e) {
+                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                    }
+                    callback.onError(errorMessage);
                 }
             }
 
@@ -518,6 +532,8 @@ public class SupabaseAuth {
         String bearerToken = "Bearer " + accessToken;
         String userIdFilter = "eq." + userId;
 
+        Log.d("SupabaseAuth", "Mencoba mengambil profil untuk userId: " + userId); // Logging untuk debug
+
         // Panggil service yang akan kita definisikan di bawah
         profileService.getProfile(bearerToken, userIdFilter, "*").enqueue(new Callback<List<Profile>>() {
             @Override
@@ -544,14 +560,11 @@ public class SupabaseAuth {
         });
     }
 
-    public static void updateProfile(String accessToken, String userId, Profile profileData, GeneralCallback callback) {
+    public static void updateProfile(String accessToken, String userId, Map<String, Object> updates, UpdateCallback callback) {
         String bearerToken = "Bearer " + accessToken;
         String userIdFilter = "eq." + userId;
-        profileData.setId(null);
-        profileData.setEmail(null); // <-- PENTING: Email TIDAK di-update
-        profileData.setPeran(null);
 
-        profileService.updateProfile(bearerToken, userIdFilter, profileData).enqueue(new Callback<Void>() {
+        profileService.updateProfileFields(bearerToken, userIdFilter, updates).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
@@ -574,6 +587,58 @@ public class SupabaseAuth {
                 callback.onError("Koneksi gagal: " + t.getMessage());
             }
         });
+    }
+    public static void hitungTotalReservasi(int jumlahPendaki, int jumlahParkir, String kodePromo, HitungReservasiCallback callback) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("p_jumlah_pendaki", jumlahPendaki);
+        params.put("p_jumlah_parkir", jumlahParkir);
+        params.put("p_kode_promo", kodePromo == null ? "" : kodePromo);
+
+        reservasiService.hitungTotalReservasi(params).enqueue(new Callback<com.zawww.e_simaksi.model.HitungReservasiResponse>() {
+            @Override
+            public void onResponse(Call<com.zawww.e_simaksi.model.HitungReservasiResponse> call, Response<com.zawww.e_simaksi.model.HitungReservasiResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Gagal menghitung biaya.");
+                }
+            }
+            @Override
+            public void onFailure(Call<com.zawww.e_simaksi.model.HitungReservasiResponse> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
+    public static void getReservasiHistory(String idPengguna, ReservasiCallback callback) {
+        String idQuery = "eq." + idPengguna;
+        String selectQuery = "*"; // Ambil semua data
+        String orderQuery = "dipesan_pada.desc"; // Urutkan dari yang terbaru
+
+        reservasiService.getReservasiByUser(idQuery, selectQuery, orderQuery)
+                .enqueue(new Callback<List<Reservasi>>() {
+                    @Override
+                    public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            Log.d("SupabaseAuth", "✅ Berhasil mengambil riwayat reservasi: " + response.body().size() + " item.");
+                            callback.onSuccess(response.body());
+                        } else {
+                            try {
+                                String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
+                                Log.e("SupabaseAuth", "Gagal mengambil riwayat reservasi: " + errBody);
+                            } catch (java.io.IOException e) {
+                                Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
+                            }
+                            callback.onError("Gagal mengambil riwayat: " + response.message());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Reservasi>> call, Throwable t) {
+                        Log.e("SupabaseAuth", "⚠️ Error koneksi riwayat reservasi: " + t.getMessage());
+                        callback.onError("Koneksi gagal: " + t.getMessage());
+                    }
+                });
     }
     // ========== SERVICE TAMBAHAN ==========
     interface UserService {
@@ -619,7 +684,7 @@ public class SupabaseAuth {
         @Headers({
                 "Content-Type: application/json",
                 "apikey: " + API_KEY,
-                "Authorization: Bearer " + API_KEY, // Pakai Service Key
+                // "Authorization: Bearer " + API_KEY, // INI SALAH: Harusnya pakai token user, bukan anon key. Dihapus agar menjadi anon request.
                 "Prefer: return=representation"
         })
         @POST("rest/v1/profiles")
@@ -740,6 +805,16 @@ public class SupabaseAuth {
                 @Header("Authorization") String authToken,
                 @Body List<BarangBawaanSampah> body
         );
+
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @POST("rest/v1/rpc/hitung_total_reservasi")
+        Call<com.zawww.e_simaksi.model.HitungReservasiResponse> hitungTotalReservasi(
+                @Body Map<String, Object> params
+        );
     }
     public interface KuotaService {
         @Headers({
@@ -827,35 +902,6 @@ public class SupabaseAuth {
         void onError(String errorMessage);
     }
 
-    public static void updateProfile(String accessToken, String userId, Map<String, Object> updates, UpdateCallback callback) {
-        String bearerToken = "Bearer " + accessToken;
-        String userIdFilter = "eq." + userId;
-
-        profileService.updateProfileFields(bearerToken, userIdFilter, updates).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("SupabaseAuth", "✅ Profil berhasil diperbarui.");
-                    callback.onSuccess();
-                } else {
-                    try {
-                        String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
-                        Log.e("SupabaseAuth", "Gagal update profil: " + errBody);
-                    } catch (Exception e) {
-                        Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
-                    }
-                    callback.onError("Gagal memperbarui profil: " + response.message());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("SupabaseAuth", "⚠️ Error koneksi updateProfile: " + t.getMessage());
-                callback.onError("Koneksi gagal: " + t.getMessage());
-            }
-        });
-    }
-
     public interface UpdateCallback {
         void onSuccess();
         void onError(String errorMessage);
@@ -876,34 +922,8 @@ public class SupabaseAuth {
         void onError(String errorMessage);
     }
 
-    public static void getReservasiHistory(String idPengguna, ReservasiCallback callback) {
-        String idQuery = "eq." + idPengguna;
-        String selectQuery = "*"; // Ambil semua data
-        String orderQuery = "dipesan_pada.desc"; // Urutkan dari yang terbaru
-
-        reservasiService.getReservasiByUser(idQuery, selectQuery, orderQuery)
-                .enqueue(new Callback<List<Reservasi>>() {
-                    @Override
-                    public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            Log.d("SupabaseAuth", "✅ Berhasil mengambil riwayat reservasi: " + response.body().size() + " item.");
-                            callback.onSuccess(response.body());
-                        } else {
-                            try {
-                                String errBody = response.errorBody() != null ? response.errorBody().string() : "null";
-                                Log.e("SupabaseAuth", "Gagal mengambil riwayat reservasi: " + errBody);
-                            } catch (java.io.IOException e) {
-                                Log.e("SupabaseAuth", "Error parsing errorBody: " + e.getMessage());
-                            }
-                            callback.onError("Gagal mengambil riwayat: " + response.message());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<Reservasi>> call, Throwable t) {
-                        Log.e("SupabaseAuth", "⚠️ Error koneksi riwayat reservasi: " + t.getMessage());
-                        callback.onError("Koneksi gagal: " + t.getMessage());
-                    }
-                });
+    public interface HitungReservasiCallback {
+        void onSuccess(com.zawww.e_simaksi.model.HitungReservasiResponse response);
+        void onError(String errorMessage);
     }
 }

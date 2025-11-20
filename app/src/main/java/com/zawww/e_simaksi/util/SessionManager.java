@@ -33,7 +33,7 @@ public class SessionManager {
 
     public void logoutUser() {
         editor.clear();
-        editor.apply();
+        editor.commit();
     }
 
     public boolean isLoggedIn() {

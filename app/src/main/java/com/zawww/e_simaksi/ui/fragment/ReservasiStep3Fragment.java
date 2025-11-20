@@ -1,6 +1,7 @@
 package com.zawww.e_simaksi.ui.fragment;
 
 import android.content.ContentResolver;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -21,16 +23,16 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import com.zawww.e_simaksi.viewmodel.ReservasiSharedViewModel;
-import com.zawww.e_simaksi.ui.fragment.ReservasiFragment;
-import com.google.android.material.textfield.TextInputEditText;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.BarangBawaanSampah;
+import com.zawww.e_simaksi.model.HitungReservasiResponse;
 import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Reservasi;
 import com.zawww.e_simaksi.util.SessionManager;
+import com.zawww.e_simaksi.viewmodel.ReservasiSharedViewModel;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -50,11 +52,25 @@ public class ReservasiStep3Fragment extends Fragment {
     private ReservasiSharedViewModel viewModel;
     private ReservasiFragment parentReservasiFragment;
     private LayoutInflater inflater;
+    private SessionManager sessionManager;
+
+    // UI Components
     private LinearLayout layoutListBarang;
     private Button btnTambahBarang;
     private TextView tvRingkasanDetail, tvRingkasanTotal;
+
+    // UI Components PROMO (Baru)
+    private EditText etKodePromo;
+    private Button btnCekPromo;
+    private TextView tvPotonganHarga;
+
     private final List<View> barangViews = new ArrayList<>();
-    private SessionManager sessionManager;
+
+    // Variables Data Transaksi
+    private Long idPromosiTerpilih = null;
+    private long finalTotalBayar = 0;
+    private long finalHargaAwal = 0;
+    private long finalNominalDiskon = 0;
 
     @Nullable
     @Override
@@ -71,10 +87,16 @@ public class ReservasiStep3Fragment extends Fragment {
         parentReservasiFragment = (ReservasiFragment) requireParentFragment();
         sessionManager = new SessionManager(requireContext());
 
+        // Binding View
         layoutListBarang = view.findViewById(R.id.layout_list_barang);
         btnTambahBarang = view.findViewById(R.id.btn_tambah_barang);
         tvRingkasanDetail = view.findViewById(R.id.tv_ringkasan_detail);
         tvRingkasanTotal = view.findViewById(R.id.tv_ringkasan_total);
+
+        // Binding View PROMO (Sesuai XML yang baru kita buat)
+        etKodePromo = view.findViewById(R.id.et_kode_promo);
+        btnCekPromo = view.findViewById(R.id.btn_cek_promo);
+        tvPotonganHarga = view.findViewById(R.id.tv_potongan_harga);
 
         Button btnSubmitFinal = requireActivity().findViewById(R.id.btn_buat_reservasi);
         btnSubmitFinal.setOnClickListener(v -> {
@@ -84,7 +106,14 @@ public class ReservasiStep3Fragment extends Fragment {
         });
 
         setupBarangBawaanListeners();
-        displayRingkasan();
+
+        // Listener Tombol Cek Promo
+        btnCekPromo.setOnClickListener(v -> cekPromo());
+
+        // Panggil cekPromo dengan string kosong saat pertama kali load
+        // Tujuannya: Menghitung harga normal valid dari server (Database Function)
+        // agar sinkron datanya sebelum user input apa-apa.
+        cekPromoInternal("");
     }
 
     private void setupBarangBawaanListeners() {
@@ -108,20 +137,71 @@ public class ReservasiStep3Fragment extends Fragment {
         });
     }
 
-    private void displayRingkasan() {
-        String tanggal = viewModel.tanggalMasuk.getValue();
-        int jumlah = viewModel.jumlahPendaki.getValue();
-        int total = viewModel.totalHarga.getValue();
+    // --- LOGIKA PROMOSI (BARU) ---
 
-        Locale localeID = new Locale("in", "ID");
-        NumberFormat formatRupiah = NumberFormat.getCurrencyInstance(localeID);
-        formatRupiah.setMaximumFractionDigits(0);
-        String totalFormatted = formatRupiah.format(total);
+    private void cekPromo() {
+        String kode = etKodePromo.getText().toString().trim();
+        if (kode.isEmpty()) {
+            etKodePromo.setError("Masukkan kode promo");
+            return;
+        }
+        cekPromoInternal(kode);
+    }
 
-        String detail = "Tanggal Masuk: " + tanggal + "\n" +
-                "Jumlah Pendaki: " + jumlah + " orang";
-        tvRingkasanDetail.setText(detail);
-        tvRingkasanTotal.setText("Total: " + totalFormatted);
+    private void cekPromoInternal(String kodePromo) {
+        // Ambil data jumlah dari ViewModel
+        int jumlahPendaki = viewModel.jumlahPendaki.getValue() != null ? viewModel.jumlahPendaki.getValue() : 1;
+        int jumlahParkir = viewModel.jumlahParkir.getValue() != null ? viewModel.jumlahParkir.getValue() : 0;
+
+        // Panggil API SupabaseAuth (RPC Function)
+        SupabaseAuth.hitungTotalReservasi(jumlahPendaki, jumlahParkir, kodePromo, new SupabaseAuth.HitungReservasiCallback() {
+            @Override
+            public void onSuccess(HitungReservasiResponse response) {
+                if (getActivity() == null) return;
+
+                // Format Currency
+                Locale localeID = new Locale("in", "ID");
+                NumberFormat formatRp = NumberFormat.getCurrencyInstance(localeID);
+                formatRp.setMaximumFractionDigits(0);
+
+                // Simpan Data ke Variabel Global (Penting untuk insert database nanti)
+                finalTotalBayar = response.getTotalAkhir();
+                finalHargaAwal = response.getHargaAwal();
+                finalNominalDiskon = response.getNominalDiskon();
+                idPromosiTerpilih = response.getIdPromosiApplied(); // Bisa null
+
+                // Update UI
+                String detail = "Subtotal: " + formatRp.format(finalHargaAwal);
+                tvRingkasanDetail.setText(detail);
+                tvRingkasanTotal.setText("Total Bayar: " + formatRp.format(finalTotalBayar));
+
+                if (finalNominalDiskon > 0) {
+                    // Jika Diskon Tembus
+                    tvPotonganHarga.setVisibility(View.VISIBLE);
+                    tvPotonganHarga.setText("Diskon: - " + formatRp.format(finalNominalDiskon));
+                    tvPotonganHarga.setTextColor(Color.parseColor("#69F0AE")); // Hijau
+                    if (!kodePromo.isEmpty()) {
+                        Toast.makeText(getContext(), "Promo Berhasil Digunakan!", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Jika Tidak Ada Diskon
+                    tvPotonganHarga.setVisibility(View.GONE);
+
+                    // Hanya munculkan error jika user memang mengetik sesuatu (bukan saat load awal)
+                    if (!kodePromo.isEmpty()) {
+                        etKodePromo.setError("Kode Promo tidak valid / Syarat tidak terpenuhi");
+                        Toast.makeText(getContext(), "Kode tidak valid", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                if (getActivity() != null) {
+                    Toast.makeText(getContext(), "Gagal menghitung harga: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private boolean validateAndSaveBarang() {
@@ -143,7 +223,6 @@ public class ReservasiStep3Fragment extends Fragment {
         Log.d("Step3", "Validasi barang sukses. Total barang: " + viewModel.listBarang.size());
         return true;
     }
-
 
     // --- PROSES SUBMIT FINAL ---
 
@@ -237,10 +316,14 @@ public class ReservasiStep3Fragment extends Fragment {
                 reservasiBody.put("tanggal_keluar", viewModel.tanggalKeluar.getValue());
                 reservasiBody.put("jumlah_pendaki", jumlahPendaki);
                 reservasiBody.put("jumlah_tiket_parkir", jumlahParkir);
-                reservasiBody.put("total_harga", viewModel.totalHarga.getValue());
                 reservasiBody.put("status", "menunggu_pembayaran");
 
-                Log.d("Step3_Trans", "LANGKAH 2: Insert ke tabel reservasi...");
+                // Bisa null, database terima null
+                reservasiBody.put("total_harga", finalTotalBayar);
+                // -------------------------------------------------------------------
+
+                Log.d("Step3_Trans", "LANGKAH 2: Insert ke tabel reservasi... ID Promo: " + idPromosiTerpilih);
+
                 SupabaseAuth.reservasiService.insertReservasi(bearerToken, reservasiBody).enqueue(new Callback<List<Reservasi>>() {
                     @Override
                     public void onResponse(Call<List<Reservasi>> call, Response<List<Reservasi>> response) {
@@ -254,7 +337,6 @@ public class ReservasiStep3Fragment extends Fragment {
                             Log.e("Step3_Trans", "Gagal insert reservasi: " + errorMsg);
                             Toast.makeText(getContext(), "Gagal membuat reservasi.", Toast.LENGTH_LONG).show();
                             parentReservasiFragment.showLoading(false);
-                            // TODO: Buat fungsi RPC 'kembalikan_kuota(idKuotaBaru, jumlahPendaki)'
                             return;
                         }
 
@@ -288,7 +370,6 @@ public class ReservasiStep3Fragment extends Fragment {
         });
     }
 
-    // --- METHOD YANG HILANG (TAMBAHKAN INI) ---
     private void insertRombonganDanBarang(String bearerToken) {
         Log.d("Step3_Trans", "LANGKAH 3: Insert " + viewModel.listPendaki.size() + " pendaki...");
 
@@ -334,7 +415,6 @@ public class ReservasiStep3Fragment extends Fragment {
         });
     }
 
-    // --- METHOD YANG HILANG (TAMBAHKAN INI) ---
     private void reservasiSukses() {
         parentReservasiFragment.showLoading(false);
         Log.d("Step3_Trans", "RESERVASI BERHASIL DIBUAT!");

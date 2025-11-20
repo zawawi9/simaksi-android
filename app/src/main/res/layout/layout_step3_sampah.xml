@@ -94,13 +94,63 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#80FFFFFF"
-                    android:layout_marginTop="8dp"/>
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"/>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="4dp">
+
+                    <EditText
+                        android:id="@+id/et_kode_promo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="Punya kode promo?"
+                        android:textColorHint="#B0BEC5"
+                        android:textColor="@android:color/white"
+                        android:backgroundTint="@android:color/white"
+                        android:inputType="textCapCharacters"
+                        android:maxLines="1"
+                        android:textSize="14sp"/>
+
+                    <Button
+                        android:id="@+id/btn_cek_promo"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:text="CEK"
+                        android:textSize="12sp"
+                        android:textColor="#FFFFFF"
+                        app:strokeColor="#FFFFFF"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"/>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_potongan_harga"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Diskon: - Rp 0"
+                    android:textColor="#69F0AE"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="gone" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#80FFFFFF"
+                    android:layout_marginTop="4dp"/>
                 <TextView
                     android:id="@+id/tv_ringkasan_total"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="12dp"
                     android:text="@string/reservasi_total"
                     android:textAlignment="textEnd"
                     android:textColor="@android:color/white"

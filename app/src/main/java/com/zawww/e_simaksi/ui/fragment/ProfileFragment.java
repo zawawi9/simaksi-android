@@ -52,7 +52,6 @@ public class ProfileFragment extends Fragment {
 
         initViews(view); // Panggil metode initViews
         sessionManager = new SessionManager(requireContext());
-        fetchUserProfileWithRefresh(); // Ambil data dari Supabase
         setupButtonListeners(); // Atur klik tombol
     }
 
@@ -230,10 +229,10 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (currentProfile != null) {
-            Log.d("ProfileFragment", "onResume: Memuat ulang profil...");
-            fetchUserProfileWithRefresh();
-        }
+        // Selalu muat ulang profil saat fragment ini ditampilkan
+        // untuk memastikan data selalu yang terbaru setelah login ulang atau edit profil.
+        Log.d("ProfileFragment", "onResume: Memuat ulang profil...");
+        fetchUserProfileWithRefresh();
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.zawww.e_simaksi.ui.fragment;
 
 import android.app.Dialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -97,7 +96,7 @@ public class HomeFragment extends Fragment {
 
         cardCuaca.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).navigateToFragment(new com.zawww.e_simaksi.ui.weather.WeatherFragment());
+                ((MainActivity) getActivity()).navigateToFragment(new WeatherFragment());
             }
         });
 

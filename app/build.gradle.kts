@@ -80,14 +80,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
 // WAJIB: Untuk LiveData (MutableLiveData)
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
-// WAJIB: Untuk Fragment (Fragment, getChildFragmentManager)
-// (Meskipun Anda punya .activity, ini lebih eksplisit untuk Fragment)
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 // UNTUK UPLOAD FILE: Diperlukan oleh SupabaseAuth
-// Retrofit tidak menyertakannya secara default
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     // OpenStreetMap alternative
     implementation("org.osmdroid:osmdroid-android:6.1.18")
     implementation("androidx.navigation:navigation-fragment:2.7.7")
     implementation("androidx.navigation:navigation-ui:2.7.7")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
