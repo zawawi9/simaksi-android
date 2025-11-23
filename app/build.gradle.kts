@@ -88,4 +88,5 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment:2.7.7")
     implementation("androidx.navigation:navigation-ui:2.7.7")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.midtrans:uikit:2.0.0-SANDBOX")
 }

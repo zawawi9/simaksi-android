@@ -52,7 +52,7 @@ public class SupabaseAuth {
     public static final KuotaService kuotaService = retrofit.create(KuotaService.class);
     private static final StorageService storageService = retrofit.create(StorageService.class);
     private static final PengaturanBiayaService pengaturanBiayaService = retrofit.create(PengaturanBiayaService.class);
-
+    public static final FunctionService functionService = retrofit.create(FunctionService.class);
     public static void getPromosiPoster(PromosiCallback callback) {
         // Panggil service untuk mengambil data
         promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
@@ -640,6 +640,40 @@ public class SupabaseAuth {
                     }
                 });
     }
+    public static void getSnapToken(String orderId, long grossAmount, TokenCallback callback) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("order_id", orderId);
+        params.put("gross_amount", grossAmount);
+
+        functionService.getPaymentToken(params).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Ambil token dari JSON: { "token": "xxxx", "redirect_url": "..." }
+                    if (response.body().has("token")) {
+                        String token = response.body().get("token").getAsString();
+                        callback.onSuccess(token);
+                    } else {
+                        callback.onError("Token tidak ditemukan dalam respons server.");
+                    }
+                } else {
+                    try {
+                        String err = response.errorBody() != null ? response.errorBody().string() : response.message();
+                        Log.e("Midtrans", "Gagal get token: " + err);
+                        callback.onError("Gagal inisialisasi pembayaran: " + err);
+                    } catch (Exception e) {
+                        callback.onError(e.getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("Midtrans", "Koneksi function gagal: " + t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
     // ========== SERVICE TAMBAHAN ==========
     interface UserService {
         @Headers({
@@ -847,7 +881,6 @@ public class SupabaseAuth {
                 @Body okhttp3.RequestBody fileBody
         );
     }
-
     public interface PengaturanBiayaService {
         @Headers({
                 "apikey: " + API_KEY,
@@ -855,6 +888,14 @@ public class SupabaseAuth {
         })
         @GET("rest/v1/pengaturan_biaya?select=nama_item,harga")
         Call<List<PengaturanBiaya>> getSemuaBiaya();
+    }
+    public interface FunctionService {
+        @Headers({
+                "Content-Type: application/json",
+                "Authorization: Bearer " + API_KEY
+        })
+        @POST("functions/v1/payment-token")
+        Call<JsonObject> getPaymentToken(@Body Map<String, Object> body);
     }
     // ========== CALLBACKS ==========
     public interface AuthCallback {
@@ -925,5 +966,9 @@ public class SupabaseAuth {
     public interface HitungReservasiCallback {
         void onSuccess(com.zawww.e_simaksi.model.HitungReservasiResponse response);
         void onError(String errorMessage);
+    }
+    public interface TokenCallback {
+        void onSuccess(String token);
+        void onError(String error);
     }
 }

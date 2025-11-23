@@ -33,6 +33,8 @@ import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Reservasi;
 import com.zawww.e_simaksi.util.SessionManager;
 import com.zawww.e_simaksi.viewmodel.ReservasiSharedViewModel;
+import com.midtrans.sdk.uikit.SdkUIFlowBuilder;
+import com.midtrans.sdk.corekit.core.MidtransSDK;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -106,6 +108,30 @@ public class ReservasiStep3Fragment extends Fragment {
         });
 
         setupBarangBawaanListeners();
+        //setup Midtrans
+        SdkUIFlowBuilder.init()
+                .setClientKey("Mid-client-KSwYAsNVtes4WcTM")
+                .setContext(requireContext())
+                .setTransactionFinishedCallback(result -> {
+                    if (result.getResponse() != null) {
+                        // Transaksi Selesai / Pending
+                        if (result.getStatus().equalsIgnoreCase("success") ||
+                                result.getStatus().equalsIgnoreCase("pending") ||
+                                result.getStatus().equalsIgnoreCase("settlement")) {
+
+                            Toast.makeText(getContext(), "Pembayaran Berhasil Diproses!", Toast.LENGTH_LONG).show();
+                            // Tutup halaman reservasi, kembali ke menu utama
+                            getParentFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                        }
+                    } else if (result.isTransactionCanceled()) {
+                        Toast.makeText(getContext(), "Pembayaran Dibatalkan", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Pembayaran Gagal", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setMerchantBaseUrl("https://google.com/") // URL Dummy (Wajib diisi tapi tidak dipakai karena kita pakai token manual)
+                .enableLog(true)
+                .buildSDK();
 
         // Listener Tombol Cek Promo
         btnCekPromo.setOnClickListener(v -> cekPromo());
@@ -341,6 +367,7 @@ public class ReservasiStep3Fragment extends Fragment {
                         }
 
                         Reservasi reservasiBaru = response.body().get(0);
+                        insertRombonganDanBarang(bearerToken, reservasiBaru);
                         long idReservasiBaru = reservasiBaru.getIdReservasi();
                         Log.d("Step3_Trans", "LANGKAH 2 Sukses. ID Reservasi: " + idReservasiBaru);
 
@@ -353,7 +380,7 @@ public class ReservasiStep3Fragment extends Fragment {
                         }
 
                         // LANGKAH 4: INSERT Rombongan & Barang
-                        insertRombonganDanBarang(bearerToken);
+                        insertRombonganDanBarang(bearerToken, reservasiBaru);
                     }
                     @Override
                     public void onFailure(Call<List<Reservasi>> call, Throwable t) {
@@ -370,7 +397,7 @@ public class ReservasiStep3Fragment extends Fragment {
         });
     }
 
-    private void insertRombonganDanBarang(String bearerToken) {
+    private void insertRombonganDanBarang(String bearerToken, Reservasi dataReservasi) {
         Log.d("Step3_Trans", "LANGKAH 3: Insert " + viewModel.listPendaki.size() + " pendaki...");
 
         SupabaseAuth.reservasiService.insertRombongan(bearerToken, viewModel.listPendaki).enqueue(new Callback<Void>() {
@@ -382,7 +409,7 @@ public class ReservasiStep3Fragment extends Fragment {
                     return;
                 }
 
-                Log.d("Step3_Trans", "LANGKAH 3 Sukses.");
+                Log.d("Step3_Trans", "LANGKAH 4 Sukses.");
 
                 if (viewModel.listBarang.isEmpty()) {
                     Log.d("Step3_Trans", "Tidak ada barang. Selesai.");
@@ -413,16 +440,33 @@ public class ReservasiStep3Fragment extends Fragment {
                 Log.e("Step3_Trans", "Koneksi Gagal (Rombongan): " + t.getMessage());
             }
         });
+        reservasiSukses(dataReservasi.getKodeReservasi(), (long) dataReservasi.getTotalHarga());
     }
 
     private void reservasiSukses() {
-        parentReservasiFragment.showLoading(false);
-        Log.d("Step3_Trans", "RESERVASI BERHASIL DIBUAT!");
-        Toast.makeText(getContext(), "Reservasi berhasil dibuat!", Toast.LENGTH_LONG).show();
-        // Kembali ke Home
-        getParentFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-    }
 
+    }
+    private void reservasiSukses(String kodeReservasi, long totalBayar) {
+        Log.d("Step3", "Minta Token Midtrans untuk Order: " + kodeReservasi + " senilai " + totalBayar);
+
+        // 1. Minta Token ke Supabase Edge Function
+        SupabaseAuth.getSnapToken(kodeReservasi, totalBayar, new SupabaseAuth.TokenCallback() {
+            @Override
+            public void onSuccess(String snapToken) {
+                parentReservasiFragment.showLoading(false);
+                Log.d("Step3", "Token didapat: " + snapToken);
+
+                // 2. Buka UI Midtrans
+                MidtransSDK.getInstance().startPaymentUiFlow(requireContext(), snapToken);
+            }
+
+            @Override
+            public void onError(String error) {
+                parentReservasiFragment.showLoading(false);
+                Toast.makeText(getContext(), "Gagal memuat pembayaran: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
     private String getFileExtension(Uri uri) {
         if (uri == null) return "jpg"; // Default
         try {

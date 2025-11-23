@@ -127,18 +127,18 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
                     case "terkonfirmasi":
                     case "berhasil":
                     case "diterima":
-                        color = R.color.menu_card_green;
+                        color = R.color.hijau_tua_brand;
                         break;
-                    case "menunggu":
+                    case "menunggu pembayaran":
                     case "pending":
-                        color = R.color.menu_card_yellow;
+                        color = R.color.purple_500;
                         break;
                     case "dibatalkan":
                     case "gagal":
                         color = R.color.menu_card_red;
                         break;
                     default:
-                        color = R.color.menu_card_blue;
+                        color = R.color.purple_500;
                         break;
                 }
                 tvTransaksiStatus.setBackgroundResource(R.drawable.bg_status_badge);

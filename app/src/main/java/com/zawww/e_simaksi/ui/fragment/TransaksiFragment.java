@@ -263,7 +263,7 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         tvJmlPendaki.setText(reservasi.getJumlahPendaki() + " orang");
 
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
-        String hargaParkir = currencyFormat.format(reservasi.getJumlahTiketParkir() * 2000L);
+        String hargaParkir = currencyFormat.format(reservasi.getJumlahTiketParkir() * 5000L);
         tvTiketParkir.setText(hargaParkir.replace("Rp", "Rp "));
 
         String totalHarga = currencyFormat.format(reservasi.getTotalHarga());
