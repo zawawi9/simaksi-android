@@ -50,15 +50,7 @@
                     android:id="@+id/tv_transaksi_tanggal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="28 Oktober 2025"
-                    android:textColor="#666666"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tv_transaksi_waktu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="14:30 WIB"
+                    android:text="28 Oktober 2025, 14:30"
                     android:textColor="#666666"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -136,20 +128,40 @@
             </LinearLayout>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_transaksi_detail"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
+            android:orientation="horizontal"
             android:layout_marginTop="12dp"
-            android:background="@drawable/bg_button_rounded"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp"
-            android:text="Lihat Detail"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            app:backgroundTint="#004D40" />
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btn_transaksi_bayar"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_button_rounded"
+                android:paddingHorizontal="16dp"
+                android:text="Bayar Sekarang"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                app:backgroundTint="@color/purple_500"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btn_transaksi_detail"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_button_rounded"
+                android:paddingHorizontal="16dp"
+                android:text="Lihat Detail"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                app:backgroundTint="#004D40" />
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -284,6 +284,7 @@ public class ReservasiStep3Fragment extends Fragment {
                 reservasiBody.put("tanggal_pendakian", tanggal);
                 reservasiBody.put("tanggal_keluar", viewModel.tanggalKeluar.getValue());
                 reservasiBody.put("jumlah_pendaki", jumlahPendaki);
+                reservasiBody.put("jumlah_parkir", viewModel.jumlahParkir.getValue() != null ? viewModel.jumlahParkir.getValue() : 0);
                 reservasiBody.put("status", "menunggu_pembayaran");
                 reservasiBody.put("total_harga", finalTotalBayar); // Harga Akhir
                 reservasiBody.put("id_promosi", idPromosiTerpilih);
@@ -366,6 +367,15 @@ public class ReservasiStep3Fragment extends Fragment {
 
                 // Cek URL ada atau tidak
                 if (redirectUrl != null && !redirectUrl.isEmpty()) {
+
+                    String urlIndo = redirectUrl;
+
+                    // Cek apakah URL sudah punya parameter lain (?)
+                    if (urlIndo.contains("?")) {
+                        urlIndo += "&language=id";
+                    } else {
+                        urlIndo += "?language=id";
+                    }
                     Log.d("Step3", "Membuka Browser: " + redirectUrl);
 
                     // BUKA BROWSER / CHROME TAB

@@ -24,6 +24,7 @@ import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.KuotaHarian;
 import com.zawww.e_simaksi.model.PengaturanBiaya; // <-- LENGKAPI: Impor model baru
 
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -38,7 +39,7 @@ public class ReservasiStep1Fragment extends Fragment {
 
     private ReservasiSharedViewModel viewModel;
     private TextInputEditText etTanggalMasuk, etTanggalKeluar, etJumlahPendaki, etJumlahParkir;
-    private TextView tvStatusKuota;
+    private TextView tvStatusKuota, tvHargaTiket, tvHargaParkir;
     private long tanggalMasukMillis = 0;
 
     // Ini adalah nilai default JIKA internet gagal
@@ -64,6 +65,8 @@ public class ReservasiStep1Fragment extends Fragment {
         etJumlahPendaki = view.findViewById(R.id.et_jumlah_pendaki);
         etJumlahParkir = view.findViewById(R.id.et_jumlah_parkir);
         tvStatusKuota = view.findViewById(R.id.tv_status_kuota);
+        tvHargaTiket = view.findViewById(R.id.tv_harga_tiket);
+        tvHargaParkir = view.findViewById(R.id.tv_harga_parkir);
 
         setupDatePickerListeners();
         setupTextWatchers();
@@ -83,6 +86,16 @@ public class ReservasiStep1Fragment extends Fragment {
                         hargaParkirDb = item.getHarga();
                     }
                 }
+                
+                // Format harga ke Rupiah
+                Locale localeID = new Locale("in", "ID");
+                NumberFormat formatRp = NumberFormat.getCurrencyInstance(localeID);
+                formatRp.setMaximumFractionDigits(0);
+
+                // Tampilkan harga di UI
+                tvHargaTiket.setText(formatRp.format(hargaTiketDb));
+                tvHargaParkir.setText(formatRp.format(hargaParkirDb));
+
                 Log.d("Step1", "Harga berhasil dimuat: Tiket=" + hargaTiketDb + ", Parkir=" + hargaParkirDb);
                 // Hitung ulang jika data sudah terisi
                 triggerKuotaCheck();

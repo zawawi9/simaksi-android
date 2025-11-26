@@ -19,6 +19,9 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 
+import com.zawww.e_simaksi.util.DateUtil;
+import android.os.Build;
+
 public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.TransaksiViewHolder> {
 
     private List<Reservasi> transaksiList;
@@ -26,6 +29,7 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
 
     public interface OnTransaksiClickListener {
         void onDetailClick(Reservasi reservasi);
+        void onBayarClick(Reservasi reservasi);
     }
 
     public TransaksiAdapter(List<Reservasi> transaksiList, OnTransaksiClickListener listener) {
@@ -59,20 +63,20 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
 
     public class TransaksiViewHolder extends RecyclerView.ViewHolder {
         private ImageView ivTransaksiIcon;
-        private TextView tvTransaksiJenis, tvTransaksiTanggal, tvTransaksiWaktu, tvTransaksiHarga;
+        private TextView tvTransaksiJenis, tvTransaksiTanggal, tvTransaksiHarga;
         private TextView tvTransaksiKode, tvTransaksiStatus;
-        private Button btnTransaksiDetail;
+        private Button btnTransaksiDetail, btnTransaksiBayar;
 
         public TransaksiViewHolder(@NonNull View itemView) {
             super(itemView);
             ivTransaksiIcon = itemView.findViewById(R.id.iv_transaksi_icon);
             tvTransaksiJenis = itemView.findViewById(R.id.tv_transaksi_jenis);
             tvTransaksiTanggal = itemView.findViewById(R.id.tv_transaksi_tanggal);
-            tvTransaksiWaktu = itemView.findViewById(R.id.tv_transaksi_waktu);
             tvTransaksiHarga = itemView.findViewById(R.id.tv_transaksi_harga);
             tvTransaksiKode = itemView.findViewById(R.id.tv_transaksi_kode);
             tvTransaksiStatus = itemView.findViewById(R.id.tv_transaksi_status);
             btnTransaksiDetail = itemView.findViewById(R.id.btn_transaksi_detail);
+            btnTransaksiBayar = itemView.findViewById(R.id.btn_transaksi_bayar);
         }
         public void bind(Reservasi transaksi) {
             // Set transaction type and icon
@@ -80,25 +84,12 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
             ivTransaksiIcon.setImageResource(R.drawable.ic_ticket);
 
             // Format date and time
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
-            String formattedDate = transaksi.getTanggalPendakian();
-            try {
-                formattedDate = outputFormat.format(inputFormat.parse(transaksi.getTanggalPendakian()));
-            } catch (Exception e) {
-                // If parsing fails, use the original date string
-            }
-
-            tvTransaksiTanggal.setText(formattedDate);
-
-            // Format time from dipesan_pada field (timestamp format)
-            String waktu = transaksi.getDipesanPada();
-            if (waktu != null && waktu.length() > 16) {
-                waktu = waktu.substring(11, 16) + " WIB"; // Extract time part
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                tvTransaksiTanggal.setText(DateUtil.formatDate(transaksi.getDipesanPada()));
             } else {
-                waktu = "Waktu tidak tersedia";
+                // Fallback for older Android versions
+                tvTransaksiTanggal.setText(transaksi.getDipesanPada());
             }
-            tvTransaksiWaktu.setText(waktu);
 
             // Format price
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
@@ -112,10 +103,24 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
             tvTransaksiStatus.setText(transaksi.getStatus());
             setStatusColor(transaksi.getStatus());
 
+            // Conditional visibility for Pay button
+            if (transaksi.getStatus() != null && transaksi.getStatus().equalsIgnoreCase("menunggu_pembayaran")) {
+                btnTransaksiBayar.setVisibility(View.VISIBLE);
+            } else {
+                btnTransaksiBayar.setVisibility(View.GONE);
+            }
+
             // Set click listener for detail button
             btnTransaksiDetail.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onDetailClick(transaksi);
+                }
+            });
+
+            // Set click listener for pay button
+            btnTransaksiBayar.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onBayarClick(transaksi);
                 }
             });
         }

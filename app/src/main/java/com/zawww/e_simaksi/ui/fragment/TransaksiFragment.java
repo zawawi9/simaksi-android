@@ -2,6 +2,9 @@ package com.zawww.e_simaksi.ui.fragment;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,13 +26,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.zawww.e_simaksi.util.SessionManager;
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.adapter.TransaksiAdapter;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.BarangBawaanSampah;
 import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Reservasi;
+import com.zawww.e_simaksi.util.DateUtil;
+import com.zawww.e_simaksi.util.SessionManager;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -209,6 +213,28 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         panggilDetailReservasi(reservasi.getIdReservasi());
     }
 
+    @Override
+    public void onBayarClick(Reservasi reservasi) {
+        // Panggil SupabaseAuth untuk mendapatkan token pembayaran
+        Toast.makeText(getContext(), "Mengarahkan ke halaman pembayaran...", Toast.LENGTH_SHORT).show();
+        SupabaseAuth.getSnapToken(reservasi.getKodeReservasi(), reservasi.getTotalHarga(), new SupabaseAuth.TokenCallback() {
+            @Override
+            public void onSuccess(String snapToken, String redirectUrl) {
+                if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(redirectUrl));
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), "Gagal mendapatkan link pembayaran.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getContext(), "Gagal memulai pembayaran: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     private void panggilDetailReservasi(long idReservasi) {
         if (idReservasi == -1L || getContext() == null) return;
         Toast.makeText(getContext(), "Memuat detail...", Toast.LENGTH_SHORT).show();
@@ -254,11 +280,29 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         TextView tvTiketParkir = dialog.findViewById(R.id.tv_detail_tiket_parkir);
         TextView tvTotalHarga = dialog.findViewById(R.id.tv_detail_total_harga);
 
-        tvKode.setText("Kode: " + reservasi.getKodeReservasi());
-        tvTanggal.setText("Tanggal Pendakian: " + reservasi.getTanggalPendakian());
-        tvDipesan.setText("Dipesan: " + reservasi.getDipesanPada());
-        tvStatus.setText("Status: " + reservasi.getStatus());
-        tvStatusSampah.setText("Status Sampah: " + reservasi.getStatusSampah());
+        tvKode.setText(reservasi.getKodeReservasi());
+        
+        // Format tanggal pendakian
+        String tanggalPendakianFormatted = reservasi.getTanggalPendakian();
+        try {
+            SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = inputSdf.parse(reservasi.getTanggalPendakian());
+            if (date != null) {
+                SimpleDateFormat outputSdf = new SimpleDateFormat("dd MMMM yyyy", new Locale("id", "ID"));
+                tanggalPendakianFormatted = outputSdf.format(date);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        tvTanggal.setText(tanggalPendakianFormatted);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            tvDipesan.setText(DateUtil.formatDate(reservasi.getDipesanPada()));
+        } else {
+            tvDipesan.setText(reservasi.getDipesanPada());
+        }
+        tvStatus.setText(reservasi.getStatus());
+        tvStatusSampah.setText(reservasi.getStatusSampah());
 
         tvJmlPendaki.setText(reservasi.getJumlahPendaki() + " orang");
 
