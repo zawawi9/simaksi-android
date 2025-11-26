@@ -41,7 +41,10 @@ public class ReservasiFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
+        // Hide bottom nav when this fragment is created
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).showBottomNav(false);
+        }
 
         viewModel = new ViewModelProvider(this).get(ReservasiSharedViewModel.class);
         btnKembali = view.findViewById(R.id.btn_kembali);
@@ -81,7 +84,10 @@ public class ReservasiFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-
+        // Show bottom nav when this fragment is destroyed
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).showBottomNav(true);
+        }
     }
 
     private void setupButtonListeners() {

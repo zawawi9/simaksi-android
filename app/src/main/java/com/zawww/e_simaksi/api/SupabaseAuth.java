@@ -652,7 +652,11 @@ public class SupabaseAuth {
                     // Ambil token dari JSON: { "token": "xxxx", "redirect_url": "..." }
                     if (response.body().has("token")) {
                         String token = response.body().get("token").getAsString();
-                        callback.onSuccess(token);
+                        String redirectUrl = "";
+                        if (response.body().has("redirect_url")) {
+                            redirectUrl = response.body().get("redirect_url").getAsString();
+                        }
+                        callback.onSuccess(token, redirectUrl);
                     } else {
                         callback.onError("Token tidak ditemukan dalam respons server.");
                     }
@@ -765,6 +769,14 @@ public class SupabaseAuth {
     }
 
     public interface ReservasiService {
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: tx=commit;tz=Asia/Jakarta" // Atur zona waktu ke WIB
+        })
+        @POST("rest/v1/reservasi") // Endpoint bisa apa saja, header yang penting
+        Call<Void> setTimeZone(@Header("Authorization") String authToken, @Body Map<String, Object> body);
+
         @Headers({
                 "apikey: " + API_KEY,
                 "Authorization: Bearer " + API_KEY
@@ -968,7 +980,7 @@ public class SupabaseAuth {
         void onError(String errorMessage);
     }
     public interface TokenCallback {
-        void onSuccess(String token);
+        void onSuccess(String token, String redirectUrl);
         void onError(String error);
     }
 }

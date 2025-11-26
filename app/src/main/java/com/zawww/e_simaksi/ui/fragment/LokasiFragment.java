@@ -43,7 +43,7 @@ public class LokasiFragment extends Fragment { // Changed from AppCompatActivity
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.activity_lokasi, container, false);
+        View view = inflater.inflate(R.layout.fragment_lokasi, container, false);
 
         // Essential osmdroid configuration
         // Use requireContext() for Fragment context

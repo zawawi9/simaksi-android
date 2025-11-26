@@ -31,6 +31,9 @@ import java.util.List; // <-- LENGKAPI: Impor List
 import java.util.Locale;
 import java.util.TimeZone;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 public class ReservasiStep1Fragment extends Fragment {
 
     private ReservasiSharedViewModel viewModel;
@@ -93,20 +96,25 @@ public class ReservasiStep1Fragment extends Fragment {
     }
 
     private void setupDatePickerListeners() {
-        // 1. Tanggal Masuk (Validasi H-7)
+        // 1. Tanggal Masuk (Validasi maks H+7)
         etTanggalMasuk.setOnClickListener(v -> {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.add(Calendar.DAY_OF_YEAR, 7);
-            long H_7_dari_sekarang = cal.getTimeInMillis();
+            // Bekerja dengan UTC untuk konsistensi MaterialDatePicker
+            Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-            CalendarConstraints constraints = new CalendarConstraints.Builder()
-                    .setStart(H_7_dari_sekarang)
-                    .setValidator(DateValidatorPointForward.from(H_7_dari_sekarang))
-                    .build();
+            // Set ke tengah malam hari ini di UTC
+            utcCalendar.set(Calendar.HOUR_OF_DAY, 0);
+            utcCalendar.set(Calendar.MINUTE, 0);
+            utcCalendar.set(Calendar.SECOND, 0);
+            utcCalendar.set(Calendar.MILLISECOND, 0);
+            long todayUtcMidnight = utcCalendar.getTimeInMillis();
+
+            CalendarConstraints.Builder constraintsBuilder = new CalendarConstraints.Builder();
+            constraintsBuilder.setValidator(new RangeDateValidator(todayUtcMidnight));
 
             MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                     .setTitleText(R.string.reservasi_tanggal_masuk_hint)
-                    .setCalendarConstraints(constraints)
+                    .setSelection(todayUtcMidnight) // Set pilihan default ke hari ini
+                    .setCalendarConstraints(constraintsBuilder.build())
                     .build();
 
             datePicker.addOnPositiveButtonClickListener(selection -> {
@@ -115,7 +123,7 @@ public class ReservasiStep1Fragment extends Fragment {
                 etTanggalMasuk.setText(tanggalFormatted);
                 etTanggalKeluar.setText(""); // Reset tanggal keluar
                 viewModel.tanggalMasuk.setValue(tanggalFormatted); // Simpan ke ViewModel
-                viewModel.tanggalKeluar.setValue(null); // <-- LENGKAPI: Reset tanggal keluar
+                viewModel.tanggalKeluar.setValue(null);
                 triggerKuotaCheck();
             });
             datePicker.show(getParentFragmentManager(), "DATE_PICKER_MASUK");
@@ -146,6 +154,48 @@ public class ReservasiStep1Fragment extends Fragment {
             });
             datePicker.show(getParentFragmentManager(), "DATE_PICKER_KELUAR");
         });
+    }
+
+    public static class RangeDateValidator implements CalendarConstraints.DateValidator {
+        private final long minDate;
+        private final long maxDate;
+
+        public RangeDateValidator(long minDate) {
+            this.minDate = minDate;
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            calendar.setTimeInMillis(minDate);
+            calendar.add(Calendar.DAY_OF_YEAR, 7);
+            this.maxDate = calendar.getTimeInMillis();
+        }
+
+        @Override
+        public boolean isValid(long date) {
+            return date >= minDate && date <= maxDate;
+        }
+
+        // Parcelable implementation
+        public static final Parcelable.Creator<RangeDateValidator> CREATOR = new Parcelable.Creator<RangeDateValidator>() {
+            @Override
+            public RangeDateValidator createFromParcel(Parcel source) {
+                long minDate = source.readLong();
+                return new RangeDateValidator(minDate);
+            }
+
+            @Override
+            public RangeDateValidator[] newArray(int size) {
+                return new RangeDateValidator[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeLong(minDate);
+        }
     }
 
     private void setupTextWatchers() {
@@ -216,7 +266,10 @@ public class ReservasiStep1Fragment extends Fragment {
 
     // <-- PERBAIKAN: Pindahkan method ini ke DALAM class
     private String formatDate(long millis) {
+        // Penting: SimpleDateFormat harus di set ke UTC agar tidak menggeser tanggal
+        // karena MaterialDatePicker mengembalikan milidetik dalam UTC.
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         return sdf.format(new Date(millis));
     }
 }
