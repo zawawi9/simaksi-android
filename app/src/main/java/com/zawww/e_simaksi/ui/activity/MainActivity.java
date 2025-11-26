@@ -23,7 +23,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.zawww.e_simaksi.R;
 
 import com.zawww.e_simaksi.util.SessionManager;
-import com.zawww.e_simaksi.ui.activity.TampilanPertamaActivity;
 import com.zawww.e_simaksi.ui.fragment.HomeFragment;
 import com.zawww.e_simaksi.ui.fragment.HubungiKamiFragment;
 import com.zawww.e_simaksi.ui.fragment.ReservasiFragment;

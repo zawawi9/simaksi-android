@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -25,12 +26,12 @@ import com.zawww.e_simaksi.ui.activity.MainActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
-    ImageView backArrow;
     TextInputLayout textFieldUsername, textFieldPassword;
     TextInputEditText editTextUsername, editTextPassword;
     MaterialButton buttonLogin;
     ProgressBar progressBar;
     private SessionManager sessionManager;
+    TextView tvLupaPassword, tvDaftarSekarang;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,13 +42,14 @@ public class LoginActivity extends AppCompatActivity {
         // Initialize session manager
         sessionManager = new SessionManager(this);
 
-        backArrow = findViewById(R.id.backArrowImageView);
         textFieldUsername = findViewById(R.id.textFieldUsername);
         editTextUsername = findViewById(R.id.editTextUsername);
         textFieldPassword = findViewById(R.id.textFieldPassword);
         editTextPassword = findViewById(R.id.editTextPassword);
         buttonLogin = findViewById(R.id.buttonLogin);
         progressBar = findViewById(R.id.progressBar);
+        tvLupaPassword = findViewById(R.id.tv_lupa_password);
+        tvDaftarSekarang = findViewById(R.id.tv_daftar_sekarang);
 
         buttonLogin.setOnClickListener(v -> {
             String email = editTextUsername.getText().toString().trim();
@@ -95,11 +97,19 @@ public class LoginActivity extends AppCompatActivity {
             });
         });
 
-        backArrow.setOnClickListener(v -> finish());
+        tvDaftarSekarang.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
+
+        tvLupaPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
             return insets;
         });
     }

@@ -21,7 +21,7 @@ import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.Profile;
 import com.zawww.e_simaksi.util.SessionManager; // Ganti ini jika path SessionManager Anda beda
-import com.zawww.e_simaksi.ui.activity.TampilanPertamaActivity; // Import untuk Logout
+import com.zawww.e_simaksi.ui.activity.LoginActivity; // Import untuk Logout
 
 public class ProfileFragment extends Fragment {
 
@@ -108,8 +108,7 @@ public class ProfileFragment extends Fragment {
 
         if (refreshToken == null) {
             Toast.makeText(getContext(), "Sesi tidak valid, silakan login ulang.", Toast.LENGTH_LONG).show();
-            // Arahkan ke Login
-            Intent intent = new Intent(getActivity(), TampilanPertamaActivity.class);
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             if (getActivity() != null) {
@@ -214,7 +213,7 @@ public class ProfileFragment extends Fragment {
                     Toast.makeText(getContext(), "Berhasil logout", Toast.LENGTH_SHORT).show();
 
                     // Kembali ke halaman login
-                    Intent intent = new Intent(getActivity(), TampilanPertamaActivity.class);
+                    Intent intent = new Intent(getActivity(), LoginActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
 

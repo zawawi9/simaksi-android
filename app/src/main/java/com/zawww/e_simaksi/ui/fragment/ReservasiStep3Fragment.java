@@ -287,7 +287,7 @@ public class ReservasiStep3Fragment extends Fragment {
                 reservasiBody.put("jumlah_parkir", viewModel.jumlahParkir.getValue() != null ? viewModel.jumlahParkir.getValue() : 0);
                 reservasiBody.put("status", "menunggu_pembayaran");
                 reservasiBody.put("total_harga", finalTotalBayar); // Harga Akhir
-                reservasiBody.put("id_promosi", idPromosiTerpilih);
+                // reservasiBody.put("id_promosi", idPromosiTerpilih.intValue()); // Kolom ini tidak ada di tabel 'reservasi' di database, jadi tidak perlu dikirim.
 
                 SupabaseAuth.reservasiService.insertReservasi(bearerToken, reservasiBody).enqueue(new Callback<List<Reservasi>>() {
                     @Override
@@ -319,38 +319,73 @@ public class ReservasiStep3Fragment extends Fragment {
     }
 
     private void insertRombonganDanBarang(String bearerToken, Reservasi dataReservasi) {
-        // ... (Kode insert rombongan & barang) ...
+        long idReservasiBaru = dataReservasi.getIdReservasi();
+
+        // Definisikan aksi untuk memicu pembayaran dalam Runnable
+        Runnable triggerPayment = () -> {
+            Log.d("Step3", "Data pendukung berhasil disimpan. Mengambil ulang data reservasi untuk pembayaran...");
+            // Ambil ulang data reservasi untuk memastikan data sudah commit sepenuhnya di database
+            SupabaseAuth.getDetailReservasi((int) idReservasiBaru, new SupabaseAuth.DetailReservasiCallback() {
+                @Override
+                public void onSuccess(Reservasi reservasiFromDb) {
+                    Log.d("Step3", "Reservasi terkonfirmasi dari DB. Memulai proses pembayaran.");
+                    // Sekarang panggil `reservasiSukses` dengan data yang sudah divalidasi dari DB
+                    reservasiSukses(reservasiFromDb.getKodeReservasi(), reservasiFromDb.getTotalHarga());
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    parentReservasiFragment.showLoading(false);
+                    Toast.makeText(getContext(), "Gagal memproses pembayaran: " + errorMessage, Toast.LENGTH_LONG).show();
+                    Log.e("Step3", "Gagal mengambil ulang detail reservasi: " + errorMessage);
+                }
+            });
+        };
+
+        // Mulai proses insert data pendukung (rombongan dan barang)
         SupabaseAuth.reservasiService.insertRombongan(bearerToken, viewModel.listPendaki).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {
                     parentReservasiFragment.showLoading(false);
+                    // TODO: Handle error, mungkin perlu menghapus reservasi yang sudah dibuat
+                    Log.e("Step3", "Gagal menyimpan data rombongan.");
+                    Toast.makeText(getContext(), "Gagal menyimpan data rombongan.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                // Jika tidak ada barang, langsung picu pembayaran
                 if (viewModel.listBarang.isEmpty()) {
-                    // PANGGIL WEB VIEW
-                    reservasiSukses(dataReservasi.getKodeReservasi(), finalTotalBayar);
+                    triggerPayment.run();
                     return;
                 }
+
+                // Jika ada barang, insert barang dulu baru picu pembayaran
                 SupabaseAuth.reservasiService.insertBarang(bearerToken, viewModel.listBarang).enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (!response.isSuccessful()) {
                             parentReservasiFragment.showLoading(false);
+                             Log.e("Step3", "Gagal menyimpan data barang.");
+                            Toast.makeText(getContext(), "Gagal menyimpan data barang.", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        // PANGGIL WEB VIEW
-                        reservasiSukses(dataReservasi.getKodeReservasi(), finalTotalBayar);
+                        // Setelah semua data berhasil disimpan, picu pembayaran
+                        triggerPayment.run();
                     }
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         parentReservasiFragment.showLoading(false);
+                        Log.e("Step3", "Koneksi gagal saat menyimpan barang: " + t.getMessage());
+                        Toast.makeText(getContext(), "Koneksi gagal saat simpan barang.", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 parentReservasiFragment.showLoading(false);
+                Log.e("Step3", "Koneksi gagal saat menyimpan rombongan: " + t.getMessage());
+                Toast.makeText(getContext(), "Koneksi gagal saat simpan rombongan.", Toast.LENGTH_SHORT).show();
             }
         });
     }

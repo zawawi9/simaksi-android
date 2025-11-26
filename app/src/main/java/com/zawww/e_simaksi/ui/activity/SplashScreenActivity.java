@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.ui.activity.MainActivity;
 import com.zawww.e_simaksi.util.SessionManager;
-import com.zawww.e_simaksi.ui.activity.TampilanPertamaActivity;
 
 public class SplashScreenActivity extends AppCompatActivity {
 
@@ -31,8 +30,8 @@ public class SplashScreenActivity extends AppCompatActivity {
                 Intent intent = new Intent(SplashScreenActivity.this, MainActivity.class);
                 startActivity(intent);
             } else {
-                // Jika belum login, ke TampilanPertamaActivity
-                Intent intent = new Intent(SplashScreenActivity.this, TampilanPertamaActivity.class);
+                // Jika belum login, ke LoginActivity
+                Intent intent = new Intent(SplashScreenActivity.this, LoginActivity.class);
                 startActivity(intent);
             }
             finish(); // Tutup splash screen agar tidak bisa kembali ke sini

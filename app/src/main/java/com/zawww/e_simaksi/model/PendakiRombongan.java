@@ -15,7 +15,7 @@ public class PendakiRombongan {
     }
 
     @SerializedName("id_pendaki")
-    private long idPendaki;
+    private Long idPendaki;
 
     @SerializedName("id_reservasi")
     private long idReservasi;
@@ -38,7 +38,7 @@ public class PendakiRombongan {
     @SerializedName("url_surat_sehat")
     private String urlSuratSehat;
 
-    public long getIdPendaki() { return idPendaki; }
+    public Long getIdPendaki() { return idPendaki; }
     public long getIdReservasi() { return idReservasi; }
     public String getNamaLengkap() { return namaLengkap; }
     public String getNik() { return nik; }

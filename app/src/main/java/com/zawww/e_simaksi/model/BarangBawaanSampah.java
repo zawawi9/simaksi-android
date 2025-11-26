@@ -10,7 +10,7 @@ public class BarangBawaanSampah {
     }
 
     @SerializedName("id_barang")
-    private long idBarang;
+    private Long idBarang;
 
     @SerializedName("id_reservasi")
     private long idReservasi;
@@ -23,7 +23,7 @@ public class BarangBawaanSampah {
     @SerializedName("jumlah")
     private int jumlah;
 
-    public long getIdBarang() {
+    public Long getIdBarang() {
         return idBarang;
     }
     public long getIdReservasi() {

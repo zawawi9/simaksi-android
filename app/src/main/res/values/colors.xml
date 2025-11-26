@@ -16,4 +16,7 @@
     <color name="menu_card_yellow">#FFF8E1</color>
     <color name="menu_card_purple">#F3E5F5</color>
     <color name="menu_card_red">#FFEBEE</color>
+    <color name="dibatalkan">#d62606</color>
+    <color name="selesai">#0e82e8</color>
+    <color name="menunggu_pembayaran">#f7e114</color>
 </resources>

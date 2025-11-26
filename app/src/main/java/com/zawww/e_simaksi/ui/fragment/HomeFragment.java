@@ -33,8 +33,13 @@ import com.zawww.e_simaksi.util.SessionManager;
 import com.zawww.e_simaksi.adapter.PromosiSliderAdapter;
 import com.zawww.e_simaksi.ui.activity.MainActivity;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeFragment extends Fragment {
 
@@ -396,115 +401,89 @@ public class HomeFragment extends Fragment {
      * Menampilkan popup (Dialog) dengan semua detail reservasi
      */
     private void showDetailDialog(Reservasi reservasi) {
-        if (getContext() == null) return; // Pastikan fragment masih ter-attach
+        if (getContext() == null) return;
 
         final Dialog dialog = new Dialog(getContext());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_detail_reservasi); // Layout XML yang kita buat
+        dialog.setContentView(R.layout.dialog_detail_reservasi);
 
-        // Atur agar dialog lebar dan punya background transparan
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        // 1. Inisialisasi semua View dari layout dialog
         ImageView btnClose = dialog.findViewById(R.id.btn_close_dialog);
         TextView tvKode = dialog.findViewById(R.id.tv_detail_kode);
         TextView tvTanggal = dialog.findViewById(R.id.tv_detail_tanggal);
         TextView tvDipesan = dialog.findViewById(R.id.tv_detail_dipesan_pada);
         TextView tvStatus = dialog.findViewById(R.id.tv_detail_status);
         TextView tvStatusSampah = dialog.findViewById(R.id.tv_detail_status_sampah);
-
         LinearLayout llPendaki = dialog.findViewById(R.id.ll_container_pendaki);
         LinearLayout llSampah = dialog.findViewById(R.id.ll_container_sampah);
-
         TextView tvJmlPendaki = dialog.findViewById(R.id.tv_detail_jumlah_pendaki);
         TextView tvTiketParkir = dialog.findViewById(R.id.tv_detail_tiket_parkir);
         TextView tvTotalHarga = dialog.findViewById(R.id.tv_detail_total_harga);
 
-        // 2. Isi data utama
-        tvKode.setText("Kode: " + reservasi.getKodeReservasi());
-        tvTanggal.setText("Tanggal Pendakian: " + reservasi.getTanggalPendakian());
-        tvDipesan.setText("Dipesan: " + reservasi.getDipesanPada()); // Format tanggal jika perlu
-        tvStatus.setText("Status: " + reservasi.getStatus());
-        tvStatusSampah.setText("Status Sampah: " + reservasi.getStatusSampah());
+        tvKode.setText(reservasi.getKodeReservasi());
+        
+        // Format tanggal pendakian
+        String tanggalPendakianFormatted = reservasi.getTanggalPendakian();
+        try {
+            java.text.SimpleDateFormat inputSdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+            java.util.Date date = inputSdf.parse(reservasi.getTanggalPendakian());
+            if (date != null) {
+                java.text.SimpleDateFormat outputSdf = new java.text.SimpleDateFormat("dd MMMM yyyy", new java.util.Locale("id", "ID"));
+                tanggalPendakianFormatted = outputSdf.format(date);
+            }
+        } catch (java.text.ParseException e) {
+            e.printStackTrace();
+        }
+        tvTanggal.setText(tanggalPendakianFormatted);
 
-        // 3. Isi data pembayaran
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            tvDipesan.setText(com.zawww.e_simaksi.util.DateUtil.formatDate(reservasi.getDipesanPada()));
+        } else {
+            tvDipesan.setText(reservasi.getDipesanPada());
+        }
+        tvStatus.setText(reservasi.getStatus());
+        tvStatusSampah.setText(reservasi.getStatusSampah());
+
         tvJmlPendaki.setText(reservasi.getJumlahPendaki() + " orang");
-        tvTiketParkir.setText(reservasi.getJumlahTiketParkir() + " tiket");
-        tvTotalHarga.setText("Rp " + reservasi.getTotalHarga()); // Format mata uang jika perlu
 
-        // 4. Isi daftar pendaki secara dinamis
-        llPendaki.removeAllViews(); // Kosongkan dulu
+        java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("in", "ID"));
+        String hargaParkir = currencyFormat.format(reservasi.getJumlahTiketParkir() * 5000L);
+        tvTiketParkir.setText(hargaParkir.replace("Rp", "Rp "));
+
+        String totalHarga = currencyFormat.format(reservasi.getTotalHarga());
+        tvTotalHarga.setText(totalHarga.replace("Rp", "Rp "));
+
+        llPendaki.removeAllViews();
         if (reservasi.getPendakiRombongan() != null && !reservasi.getPendakiRombongan().isEmpty()) {
             for (PendakiRombongan pendaki : reservasi.getPendakiRombongan()) {
-                // Buat layout kecil untuk tiap pendaki
-                LinearLayout layoutPendaki = new LinearLayout(getContext());
-                layoutPendaki.setOrientation(LinearLayout.VERTICAL);
-                layoutPendaki.setPadding(0, dpToPx(4), 0, dpToPx(4)); // Beri jarak antar pendaki
-
-                TextView tvNama = new TextView(getContext());
-                tvNama.setText(pendaki.getNamaLengkap() + " (" + pendaki.getNik() + ")");
-                tvNama.setTextSize(14);
-                tvNama.setTextColor(ContextCompat.getColor(getContext(), android.R.color.black));
-                tvNama.setTypeface(tvNama.getTypeface(), android.graphics.Typeface.BOLD);
-
-                TextView tvKontak = new TextView(getContext());
-                tvKontak.setText("Telp: " + pendaki.getNomorTelepon() + " | Darurat: " + pendaki.getKontakDarurat());
-                tvKontak.setTextSize(12);
-
-                TextView tvAlamat = new TextView(getContext());
-                tvAlamat.setText("Alamat: " + pendaki.getAlamat());
-                tvAlamat.setTextSize(12);
-
-                layoutPendaki.addView(tvNama);
-                layoutPendaki.addView(tvKontak);
-                layoutPendaki.addView(tvAlamat);
-
-                // Tampilkan Link Surat Sehat jika ada
-                if (pendaki.getUrlSuratSehat() != null && !pendaki.getUrlSuratSehat().isEmpty()) {
-                    TextView tvSurat = new TextView(getContext());
-                    tvSurat.setText("Lihat Surat Sehat"); // Nanti bisa Anda buat clickable
-                    tvSurat.setTextSize(12);
-                    tvSurat.setTextColor(ContextCompat.getColor(getContext(), R.color.purple_500)); // Ganti warnanya
-                    // tvSurat.setOnClickListener(v -> /* Buka link */);
-                    layoutPendaki.addView(tvSurat);
-                }
-
-                llPendaki.addView(layoutPendaki);
+                TextView tv = new TextView(getContext());
+                tv.setText("\u2022 " + pendaki.getNamaLengkap() + " (" + pendaki.getNik() + ")");
+                llPendaki.addView(tv);
             }
         } else {
-            // Jika tidak ada data rombongan
             TextView tvKosong = new TextView(getContext());
             tvKosong.setText("Data rombongan tidak ditemukan.");
-            tvKosong.setTextSize(12);
             llPendaki.addView(tvKosong);
         }
 
-        // 5. Isi daftar sampah secara dinamis
-        llSampah.removeAllViews(); // Kosongkan dulu
+        llSampah.removeAllViews();
         if (reservasi.getBarangBawaanSampah() != null && !reservasi.getBarangBawaanSampah().isEmpty()) {
             for (BarangBawaanSampah barang : reservasi.getBarangBawaanSampah()) {
-                String teksBarang = "• " + barang.getNamaBarang() + " (" + barang.getJenisSampah() + ") - Jumlah: " + barang.getJumlah();
-                TextView tvBarang = new TextView(getContext());
-                tvBarang.setText(teksBarang);
-                tvBarang.setTextSize(14);
-                tvBarang.setPadding(0, dpToPx(2), 0, dpToPx(2)); // Beri jarak
-                llSampah.addView(tvBarang);
+                TextView tv = new TextView(getContext());
+                tv.setText("\u2022 " + barang.getNamaBarang() + " (" + barang.getJumlah() + " buah)");
+                llSampah.addView(tv);
             }
         } else {
-            // Jika tidak ada data sampah
             TextView tvKosong = new TextView(getContext());
             tvKosong.setText("Data sampah tidak ditemukan.");
-            tvKosong.setTextSize(12);
             llSampah.addView(tvKosong);
         }
 
-        // 6. Atur tombol close
         btnClose.setOnClickListener(v -> dialog.dismiss());
-
-        // 7. Tampilkan dialog
         dialog.show();
     }
 }

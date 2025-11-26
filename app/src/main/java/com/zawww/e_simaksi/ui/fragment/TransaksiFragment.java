@@ -161,16 +161,29 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
 
         // Filter by Status
         if (!selectedStatus.equalsIgnoreCase("Semua")) {
-            // Adjust status mapping if necessary
-            String statusToFilter = selectedStatus;
-            if (selectedStatus.equalsIgnoreCase("Berhasil")) {
-                statusToFilter = "terkonfirmasi";
-            } else if (selectedStatus.equalsIgnoreCase("Gagal")) {
-                statusToFilter = "dibatalkan";
+            String statusToFilter;
+            // Map display text from chip to actual enum value
+            switch (selectedStatus.toLowerCase()) {
+                case "menunggu pembayaran":
+                    statusToFilter = "menunggu_pembayaran";
+                    break;
+                case "terkonfirmasi":
+                    statusToFilter = "terkonfirmasi";
+                    break;
+                case "dibatalkan":
+                    statusToFilter = "dibatalkan";
+                    break;
+                case "selesai":
+                    statusToFilter = "selesai";
+                    break;
+                // Fallback for any unexpected chip text, though ideally all should be mapped
+                default:
+                    statusToFilter = selectedStatus.toLowerCase(); // Use as-is, converted to lowercase
+                    break;
             }
-            String finalStatus = statusToFilter.toLowerCase();
+            final String finalStatus = statusToFilter; // Needs to be final for lambda
             filteredList = filteredList.stream()
-                    .filter(r -> r.getStatus().equalsIgnoreCase(finalStatus))
+                    .filter(r -> r.getStatus().toLowerCase().equals(finalStatus)) // Use .equals for exact match
                     .collect(Collectors.toList());
         }
 
