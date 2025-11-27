@@ -1,116 +1,214 @@
 package com.zawww.e_simaksi.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Patterns;
+import android.text.TextUtils;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
+import com.zawww.e_simaksi.util.SessionManager;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    ImageView backArrow;
-    TextInputLayout textFieldEmail, textFieldUsername, textFieldPassword;
-    TextInputEditText editTextEmail, editTextUsername, editTextPassword;
-    MaterialButton buttonNext;
-    ProgressBar progressBar;
+    // Komponen UI
+    private TextInputEditText etName, etEmail, etPassword, etConfirmPass, etToken;
+    private TextInputLayout layoutName, layoutEmail, layoutPass, layoutConfirmPass, layoutToken;
+    private MaterialButton btnAction;
+    private TextView tvLoginLink;
+    private ProgressBar progressBar;
+
+    // Status: false = Mode Daftar, true = Mode Verifikasi Token
+    private boolean isTokenMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_register);
 
-        // Inisialisasi komponen UI
-        textFieldEmail = findViewById(R.id.textFieldEmail);
-        editTextEmail = findViewById(R.id.editTextEmail);
-        textFieldUsername = findViewById(R.id.textFieldUsername);
-        editTextUsername = findViewById(R.id.editTextUsername);
-        textFieldPassword = findViewById(R.id.textFieldPassword);
-        editTextPassword = findViewById(R.id.editTextPassword);
-        backArrow = findViewById(R.id.backArrowImageView);
-        buttonNext = findViewById(R.id.buttonNext);
-        progressBar = findViewById(R.id.progressBar);
+        // 1. Inisialisasi View (Sambungkan dengan ID di XML)
+        initViews();
 
-        backArrow.setOnClickListener(v -> finish());
+        // 2. Atur Listener Tombol Utama
+        btnAction.setOnClickListener(v -> {
+            if (!isTokenMode) {
+                // Jika masih mode daftar -> Kirim Data ke Supabase
+                processRegistration();
+            } else {
+                // Jika sudah mode token -> Verifikasi Token
+                processVerification();
+            }
+        });
 
-        buttonNext.setOnClickListener(v -> validateAndProceed());
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        // 3. Link ke Login
+        tvLoginLink.setOnClickListener(v -> {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         });
     }
 
-    private void validateAndProceed() {
-        String email = editTextEmail.getText().toString().trim();
-        String username = editTextUsername.getText().toString().trim(); // → akan dikirim ke kolom nama_lengkap
-        String password = editTextPassword.getText().toString().trim();
+    private void initViews() {
+        // EditText (Inputan)
+        etName = findViewById(R.id.editTextFullName);
+        etEmail = findViewById(R.id.editTextEmail);
+        etPassword = findViewById(R.id.editTextPassword);
+        etConfirmPass = findViewById(R.id.editTextConfirmPassword);
+        etToken = findViewById(R.id.editTextToken);
 
-        // Reset error
-        textFieldEmail.setError(null);
-        textFieldUsername.setError(null);
-        textFieldPassword.setError(null);
+        // Layout (Pembungkus Inputan - buat nampilin error)
+        layoutName = findViewById(R.id.textFieldFullName);
+        layoutEmail = findViewById(R.id.textFieldEmail);
+        layoutPass = findViewById(R.id.textFieldPassword);
+        layoutConfirmPass = findViewById(R.id.textFieldConfirmPassword);
+        layoutToken = findViewById(R.id.textFieldToken);
 
-        // Validasi input
-        if (email.isEmpty()) {
-            textFieldEmail.setError("Email tidak boleh kosong");
+        // Tombol & Loading
+        btnAction = findViewById(R.id.buttonRegister);
+        tvLoginLink = findViewById(R.id.tv_login_sekarang);
+        progressBar = findViewById(R.id.progressBar);
+
+        // Set Tampilan Awal: Sembunyikan Kolom Token
+        layoutToken.setVisibility(View.GONE);
+        btnAction.setText("DAFTAR SEKARANG");
+    }
+
+    // --- TAHAP 1: PROSES DAFTAR ---
+    private void processRegistration() {
+        String name = etName.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+        String confirmPass = etConfirmPass.getText().toString().trim();
+
+        // Validasi Input
+        if (TextUtils.isEmpty(name)) {
+            layoutName.setError("Nama wajib diisi");
+            return;
+        }
+        if (TextUtils.isEmpty(email)) {
+            layoutEmail.setError("Email wajib diisi");
+            return;
+        }
+        if (TextUtils.isEmpty(password) || password.length() < 6) {
+            layoutPass.setError("Password minimal 6 karakter");
+            return;
+        }
+        if (!password.equals(confirmPass)) {
+            layoutConfirmPass.setError("Password tidak sama");
             return;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            textFieldEmail.setError("Format email tidak valid");
-            return;
-        }
+        // Bersihkan Error sebelumnya
+        clearErrors();
+        setLoading(true);
 
-        if (username.isEmpty()) {
-            textFieldUsername.setError("Nama lengkap tidak boleh kosong");
-            return;
-        }
-
-        if (password.isEmpty()) {
-            textFieldPassword.setError("Password tidak boleh kosong");
-            return;
-        }
-
-        if (password.length() < 6) {
-            textFieldPassword.setError("Password minimal harus 6 karakter");
-            return;
-        }
-
-        // Jika valid → tampilkan loading
-        progressBar.setVisibility(View.VISIBLE);
-        buttonNext.setEnabled(false);
-
-        // Panggil fungsi register Supabase
-        SupabaseAuth.registerUser(email, password, username, new SupabaseAuth.RegisterCallback() {
+        // Panggil Supabase
+        SupabaseAuth.registerUser(email, password, name, new SupabaseAuth.RegisterCallback() {
             @Override
             public void onSuccess() {
-                progressBar.setVisibility(View.GONE);
-                buttonNext.setEnabled(true);
-                Toast.makeText(RegisterActivity.this, "Registrasi berhasil! Cek email untuk verifikasi.", Toast.LENGTH_LONG).show();
-                finish(); // Tutup activity, balik ke login
+                setLoading(false);
+                Toast.makeText(RegisterActivity.this, "Kode verifikasi terkirim ke email!", Toast.LENGTH_LONG).show();
+
+                // BERHASIL -> Ubah tampilan ke Mode Input Token
+                switchToTokenMode();
             }
 
             @Override
             public void onError(String errorMessage) {
-                progressBar.setVisibility(View.GONE);
-                buttonNext.setEnabled(true);
+                setLoading(false);
                 Toast.makeText(RegisterActivity.this, "Gagal: " + errorMessage, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    // --- TAHAP 2: PROSES VERIFIKASI TOKEN ---
+    private void processVerification() {
+        String email = etEmail.getText().toString().trim();
+        String token = etToken.getText().toString().trim();
+
+        if (TextUtils.isEmpty(token)) {
+            layoutToken.setError("Masukkan kode token dari email");
+            return;
+        }
+
+        setLoading(true);
+
+        // Panggil Verifikasi OTP
+        SupabaseAuth.verifyEmailOtp(email, token, new SupabaseAuth.AuthCallback() {
+            @Override
+            public void onSuccess(String accessToken, String userId, String refreshToken) {
+                setLoading(false);
+
+                // Simpan Data Login ke Session
+                SessionManager session = new SessionManager(RegisterActivity.this);
+                session.createLoginSession(accessToken, userId, email, refreshToken);
+
+                Toast.makeText(RegisterActivity.this, "Pendaftaran Berhasil!", Toast.LENGTH_LONG).show();
+
+                // Pindah ke Home (Main Activity)
+                Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Hapus history
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                setLoading(false);
+                layoutToken.setError(errorMessage); // Tampilkan error di kolom token
+                Toast.makeText(RegisterActivity.this, "Gagal Verifikasi", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Helper: Mengubah UI menjadi Mode Input Token
+    private void switchToTokenMode() {
+        isTokenMode = true; // Ubah status
+
+        // UI Changes:
+        layoutToken.setVisibility(View.VISIBLE); // Munculkan kolom Token
+
+        // Sembunyikan yang gak perlu biar rapi
+        layoutName.setVisibility(View.GONE);
+        layoutConfirmPass.setVisibility(View.GONE);
+
+        // Matikan email & password biar gak diubah user
+        layoutEmail.setEnabled(false);
+        layoutPass.setEnabled(false);
+
+        // Ubah teks tombol
+        btnAction.setText("VERIFIKASI AKUN");
+
+        // Fokus kursor ke kolom token
+        etToken.requestFocus();
+    }
+
+    private void clearErrors() {
+        layoutName.setError(null);
+        layoutEmail.setError(null);
+        layoutPass.setError(null);
+        layoutConfirmPass.setError(null);
+        layoutToken.setError(null);
+    }
+
+    private void setLoading(boolean isLoading) {
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            btnAction.setEnabled(false);
+            btnAction.setText("Loading...");
+        } else {
+            progressBar.setVisibility(View.GONE);
+            btnAction.setEnabled(true);
+            // Kembalikan teks tombol sesuai mode
+            btnAction.setText(isTokenMode ? "VERIFIKASI AKUN" : "DAFTAR SEKARANG");
+        }
     }
 }
