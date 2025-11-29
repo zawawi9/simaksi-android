@@ -156,24 +156,24 @@ public class SupabaseAuth {
         });
     }
 
-    // 4. LUPA PASSWORD: Kirim Email Reset
-    public static void sendPasswordReset(String email, UpdateCallback callback) {
+    // 4.1 LUPA PASSWORD: Kirim OTP Reset
+    public static void sendPasswordResetOtp(String email, UpdateCallback callback) {
         Map<String, Object> body = new HashMap<>();
         body.put("email", email);
+        body.put("create_user", false);
 
-        authService.recoverPassword(body).enqueue(new Callback<JsonObject>() {
+        authService.sendOtp(body).enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                // Supabase return 200 OK walaupun email tidak ada (security feature)
                 if (response.isSuccessful()) {
                     callback.onSuccess();
                 } else {
-                    callback.onError("Gagal mengirim email reset.");
+                    handleErrorResponse(response, callback::onError);
                 }
             }
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                callback.onError(t.getMessage());
+                callback.onError("Koneksi gagal: " + t.getMessage());
             }
         });
     }
@@ -197,6 +197,33 @@ public class SupabaseAuth {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 callback.onError(t.getMessage());
+            }
+        });
+    }
+
+    // 5.1 LUPA PASSWORD: Reset via OTP
+    public static void resetPasswordWithOtp(String email, String token, String newPassword, UpdateCallback callback) {
+        // Step 1: Verify the OTP to get a valid session (access token)
+        verifyRecoveryOtp(email, token, new AuthCallback() {
+            @Override
+            public void onSuccess(String accessToken, String userId, String refreshToken) {
+                // Step 2: With the access token, update the user's password
+                updateUserPassword(accessToken, newPassword, new UpdateCallback() {
+                    @Override
+                    public void onSuccess() {
+                        callback.onSuccess();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        callback.onError("Gagal mengubah password setelah verifikasi OTP: " + errorMessage);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                callback.onError("Verifikasi OTP gagal: " + errorMessage);
             }
         });
     }
@@ -558,6 +585,35 @@ public class SupabaseAuth {
         });
     }
 
+    public static void ajukanRefund(int idReservasi, String alasan, String bank, String noRek,
+                                    String atasNama, int persentase, long nominal, GeneralCallback callback) {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", "pengajuan_refund");
+        updates.put("alasan_batal", alasan);
+        updates.put("bank_refund", bank);
+        updates.put("no_rek_refund", noRek);
+        updates.put("atas_nama_refund", atasNama);
+        updates.put("persentase_refund", persentase);
+        updates.put("nominal_refund", nominal);
+
+        String idQuery = "eq." + idReservasi;
+
+        reservasiService.ajukanRefund(idQuery, updates).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                } else {
+                    callback.onError("Gagal mengajukan refund.");
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
 
     // =============================================================================================
     // BAGIAN 3: RETROFIT INTERFACES
@@ -570,36 +626,43 @@ public class SupabaseAuth {
     }
 
     interface AuthService {
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
         @POST("auth/v1/signup")
         Call<JsonObject> register(@Body Map<String, Object> body);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
+        @POST("auth/v1/otp")
+        Call<JsonObject> sendOtp(@Body Map<String, Object> body);
+
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
         @POST("auth/v1/token?grant_type=password")
         Call<JsonObject> login(@Body Map<String, Object> body);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
         @POST("auth/v1/token?grant_type=refresh_token")
         Call<JsonObject> refreshToken(@Body Map<String, Object> body);
 
         // Digabungkan: Endpoint Verify (Bisa untuk Signup & Recovery)
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
         @POST("auth/v1/verify")
         Call<JsonObject> verifyOtp(@Body Map<String, Object> body);
 
-        // Digabungkan: Endpoint Recover Password
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
-        @POST("auth/v1/recover")
-        Call<JsonObject> recoverPassword(@Body Map<String, Object> body);
-
         // Endpoint Update User (Ganti Password)
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
         @PUT("auth/v1/user")
         Call<JsonObject> updateUser(@Header("Authorization") String token, @Body Map<String, Object> body);
     }
 
     interface ProfileService {
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY, "Prefer: return=representation"})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: return=representation"})
         @POST("rest/v1/profiles")
         Call<JsonObject> insertProfile(@Body Map<String, Object> body);
 
@@ -607,45 +670,69 @@ public class SupabaseAuth {
         @GET("rest/v1/profiles")
         Call<List<Profile>> getProfile(@Header("Authorization") String bearerToken, @Query("id") String userId, @Query("select") String select);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY, "Prefer: return=minimal"})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: return=minimal"})
         @PATCH("rest/v1/profiles")
         Call<Void> updateProfileFields(@Header("Authorization") String bearerToken, @Query("id") String userId, @Body Map<String, Object> profileData);
     }
 
     interface PromosiService {
-        @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @Headers({"apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY})
         @GET("rest/v1/promosi_poster?is_aktif=eq.true&order=urutan.asc")
         Call<List<Promosi>> getPromosiAktif();
     }
-
     public interface ReservasiService {
-        @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @Headers({"apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY})
         @GET("rest/v1/reservasi")
         Call<List<Reservasi>> getDetailReservasi(@Query("id_reservasi") String idQuery, @Query("select") String select);
 
-        @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @Headers({"apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY})
         @GET("rest/v1/reservasi")
         Call<List<Reservasi>> getJadwalAktif(@Query("id_pengguna") String idPengguna, @Query("status") String status, @Query("tanggal_pendakian") String tgl, @Query("select") String sel, @Query("order") String ord, @Query("limit") int limit);
 
-        @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @Headers({"apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY})
         @GET("rest/v1/reservasi")
         Call<List<Reservasi>> getReservasiByUser(@Query("id_pengguna") String idPengguna, @Query("select") String select, @Query("order") String order);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY, "Prefer: return=representation,resolution=merge-duplicates"})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: return=representation,resolution=merge-duplicates"})
         @POST("rest/v1/reservasi")
         Call<List<Reservasi>> insertReservasi(@Header("Authorization") String authToken, @Body Map<String, Object> body);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY, "Prefer: resolution=merge-duplicates"})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: resolution=merge-duplicates"})
         @POST("rest/v1/pendaki_rombongan")
         Call<Void> insertRombongan(@Header("Authorization") String authToken, @Body List<PendakiRombongan> body);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY, "Prefer: resolution=merge-duplicates"})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Prefer: resolution=merge-duplicates"})
         @POST("rest/v1/barang_bawaan_sampah")
         Call<Void> insertBarang(@Header("Authorization") String authToken, @Body List<BarangBawaanSampah> body);
 
-        @Headers({"Content-Type: application/json", "apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY})
         @POST("rest/v1/rpc/hitung_total_reservasi")
         Call<com.zawww.e_simaksi.model.HitungReservasiResponse> hitungTotalReservasi(@Body Map<String, Object> params);
+
+        @Headers({
+                "Content-Type: application/json",
+                "apikey: " + API_KEY,
+                "Authorization: Bearer " + API_KEY
+        })
+        @PATCH("rest/v1/reservasi")
+        Call<Void> ajukanRefund(
+                @Query("id_reservasi") String idReservasiQuery,
+                @Body Map<String, Object> body
+        );
     }
 
     public interface KuotaService {

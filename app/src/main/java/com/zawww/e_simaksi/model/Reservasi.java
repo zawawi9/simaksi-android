@@ -48,18 +48,78 @@ public class Reservasi {
     @SerializedName("barang_bawaan_sampah")
     private List<BarangBawaanSampah> barangBawaanSampah;
 
-    public long getIdReservasi() { return idReservasi; }
-    public String getIdPengguna() { return idPengguna; }
-    public String getKodeReservasi() { return kodeReservasi; }
-    public String getTanggalPendakian() { return tanggalPendakian; }
-    public int getJumlahPendaki() { return jumlahPendaki; }
-    public int getJumlahTiketParkir() { return jumlahTiketParkir; }
-    public int getTotalHarga() { return totalHarga; }
-    public String getStatus() { return status; }
-    public int getJumlahPotensiSampah() { return jumlahPotensiSampah; }
-    public String getStatusSampah() { return statusSampah; }
-    public String getDipesanPada() { return dipesanPada; }
-    public String getTanggalKeluar() { return tanggalKeluar; }
-    public List<PendakiRombongan> getPendakiRombongan() { return pendakiRombongan; }
-    public List<BarangBawaanSampah> getBarangBawaanSampah() { return barangBawaanSampah; }
+    @com.google.gson.annotations.SerializedName("nominal_refund")
+    private Long nominalRefund;
+
+    @com.google.gson.annotations.SerializedName("bukti_refund")
+    private String buktiRefund;
+
+    @com.google.gson.annotations.SerializedName("alasan_batal")
+    private String alasanBatal;
+
+    @com.google.gson.annotations.SerializedName("bank_refund")
+    private String bankRefund;
+
+    @com.google.gson.annotations.SerializedName("no_rek_refund")
+    private String noRekRefund;
+
+    @com.google.gson.annotations.SerializedName("atas_nama_refund")
+    private String atasNamaRefund;
+
+    @com.google.gson.annotations.SerializedName("persentase_refund")
+    private Integer persentaseRefund;
+
+    public long getIdReservasi() {
+        return idReservasi;
+    }
+    public String getIdPengguna() {
+        return idPengguna;
+    }
+    public String getKodeReservasi() {
+        return kodeReservasi;
+    }
+    public String getTanggalPendakian() {
+        return tanggalPendakian;
+    }
+    public int getJumlahPendaki() {
+        return jumlahPendaki;
+    }
+    public int getJumlahTiketParkir() {
+        return jumlahTiketParkir;
+    }
+    public int getTotalHarga() {
+        return totalHarga;
+    }
+    public String getStatus() {
+        return status;
+    }
+    public int getJumlahPotensiSampah() {
+        return jumlahPotensiSampah;
+    }
+    public String getStatusSampah() {
+        return statusSampah;
+    }
+    public String getDipesanPada() {
+        return dipesanPada;
+    }
+    public String getTanggalKeluar() {
+        return tanggalKeluar;
+    }
+    public List<PendakiRombongan> getPendakiRombongan() {
+        return pendakiRombongan;
+    }
+    public List<BarangBawaanSampah> getBarangBawaanSampah() {
+        return barangBawaanSampah;
+    }
+    public Long getNominalRefund() {
+        return nominalRefund != null ? nominalRefund : 0L;
+    }
+
+    public String getBuktiRefund() {
+        return buktiRefund;
+    }
+
+    public String getAlasanBatal() {
+        return alasanBatal;
+    }
 }

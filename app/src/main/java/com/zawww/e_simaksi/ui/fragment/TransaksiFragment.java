@@ -6,13 +6,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,8 +22,11 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide; // Pastikan library Glide sudah ada
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputEditText;
 import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.adapter.TransaksiAdapter;
 import com.zawww.e_simaksi.api.SupabaseAuth;
@@ -33,6 +34,7 @@ import com.zawww.e_simaksi.model.BarangBawaanSampah;
 import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Reservasi;
 import com.zawww.e_simaksi.util.DateUtil;
+import com.zawww.e_simaksi.util.RefundHelper;
 import com.zawww.e_simaksi.util.SessionManager;
 
 import java.text.NumberFormat;
@@ -82,7 +84,6 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         setupFilters();
         loadTransaksiData();
     }
-
 
     private void setupRecyclerView() {
         adapter = new TransaksiAdapter(new ArrayList<>(), this);
@@ -162,28 +163,16 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         // Filter by Status
         if (!selectedStatus.equalsIgnoreCase("Semua")) {
             String statusToFilter;
-            // Map display text from chip to actual enum value
             switch (selectedStatus.toLowerCase()) {
-                case "menunggu pembayaran":
-                    statusToFilter = "menunggu_pembayaran";
-                    break;
-                case "terkonfirmasi":
-                    statusToFilter = "terkonfirmasi";
-                    break;
-                case "dibatalkan":
-                    statusToFilter = "dibatalkan";
-                    break;
-                case "selesai":
-                    statusToFilter = "selesai";
-                    break;
-                // Fallback for any unexpected chip text, though ideally all should be mapped
-                default:
-                    statusToFilter = selectedStatus.toLowerCase(); // Use as-is, converted to lowercase
-                    break;
+                case "menunggu pembayaran": statusToFilter = "menunggu_pembayaran"; break;
+                case "terkonfirmasi": statusToFilter = "terkonfirmasi"; break;
+                case "dibatalkan": statusToFilter = "dibatalkan"; break;
+                case "selesai": statusToFilter = "selesai"; break;
+                default: statusToFilter = selectedStatus.toLowerCase(); break;
             }
-            final String finalStatus = statusToFilter; // Needs to be final for lambda
+            final String finalStatus = statusToFilter;
             filteredList = filteredList.stream()
-                    .filter(r -> r.getStatus().toLowerCase().equals(finalStatus)) // Use .equals for exact match
+                    .filter(r -> r.getStatus().toLowerCase().equals(finalStatus))
                     .collect(Collectors.toList());
         }
 
@@ -194,9 +183,7 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
                 try {
                     Date tglReservasi = sdf.parse(r.getTanggalPendakian());
                     return tglReservasi != null && !tglReservasi.before(tglMulaiCalendar.getTime());
-                } catch (ParseException e) {
-                    return false;
-                }
+                } catch (ParseException e) { return false; }
             }).collect(Collectors.toList());
         }
         if (tglAkhirCalendar != null) {
@@ -204,9 +191,7 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
                 try {
                     Date tglReservasi = sdf.parse(r.getTanggalPendakian());
                     return tglReservasi != null && !tglReservasi.after(tglAkhirCalendar.getTime());
-                } catch (ParseException e) {
-                    return false;
-                }
+                } catch (ParseException e) { return false; }
             }).collect(Collectors.toList());
         }
 
@@ -228,7 +213,6 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
 
     @Override
     public void onBayarClick(Reservasi reservasi) {
-        // Panggil SupabaseAuth untuk mendapatkan token pembayaran
         Toast.makeText(getContext(), "Mengarahkan ke halaman pembayaran...", Toast.LENGTH_SHORT).show();
         SupabaseAuth.getSnapToken(reservasi.getKodeReservasi(), reservasi.getTotalHarga(), new SupabaseAuth.TokenCallback() {
             @Override
@@ -252,6 +236,8 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         if (idReservasi == -1L || getContext() == null) return;
         Toast.makeText(getContext(), "Memuat detail...", Toast.LENGTH_SHORT).show();
 
+        // Casting ke int karena SupabaseAuth.getDetailReservasi kemungkinan minta int
+        // Kalau method di SupabaseAuth sudah kamu ubah jadi long, hapus (int)-nya
         SupabaseAuth.getDetailReservasi((int) idReservasi, new SupabaseAuth.DetailReservasiCallback() {
             @Override
             public void onSuccess(Reservasi reservasi) {
@@ -269,6 +255,9 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         });
     }
 
+    // =========================================================================
+    //  METHOD MENAMPILKAN DETAIL + LOGIC REFUND
+    // =========================================================================
     private void showDetailDialog(Reservasi reservasi) {
         if (getContext() == null) return;
 
@@ -281,6 +270,7 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
+        // Init Components
         ImageView btnClose = dialog.findViewById(R.id.btn_close_dialog);
         TextView tvKode = dialog.findViewById(R.id.tv_detail_kode);
         TextView tvTanggal = dialog.findViewById(R.id.tv_detail_tanggal);
@@ -293,9 +283,20 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         TextView tvTiketParkir = dialog.findViewById(R.id.tv_detail_tiket_parkir);
         TextView tvTotalHarga = dialog.findViewById(R.id.tv_detail_total_harga);
 
+        // Komponen Refund UI
+        LinearLayout layoutInfoRefund = dialog.findViewById(R.id.layout_info_refund);
+        TextView tvStatusRefundText = dialog.findViewById(R.id.tv_status_refund_text);
+        TextView tvNominalRefundInfo = dialog.findViewById(R.id.tv_nominal_refund_info);
+
+        LinearLayout layoutBuktiRefund = dialog.findViewById(R.id.layout_bukti_refund);
+        ImageView imgBuktiRefund = dialog.findViewById(R.id.img_bukti_refund);
+        MaterialButton btnLihatBuktiFull = dialog.findViewById(R.id.btn_lihat_bukti_full);
+        MaterialButton btnBatalkan = dialog.findViewById(R.id.btn_batalkan_pesanan);
+
+        // --- SET DATA ---
         tvKode.setText(reservasi.getKodeReservasi());
-        
-        // Format tanggal pendakian
+
+        // Format tanggal
         String tanggalPendakianFormatted = reservasi.getTanggalPendakian();
         try {
             SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -304,9 +305,7 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
                 SimpleDateFormat outputSdf = new SimpleDateFormat("dd MMMM yyyy", new Locale("id", "ID"));
                 tanggalPendakianFormatted = outputSdf.format(date);
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        } catch (ParseException e) { e.printStackTrace(); }
         tvTanggal.setText(tanggalPendakianFormatted);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -314,9 +313,9 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         } else {
             tvDipesan.setText(reservasi.getDipesanPada());
         }
-        tvStatus.setText(reservasi.getStatus());
-        tvStatusSampah.setText(reservasi.getStatusSampah());
 
+        tvStatus.setText(reservasi.getStatus().replace("_", " ").toUpperCase());
+        tvStatusSampah.setText(reservasi.getStatusSampah());
         tvJmlPendaki.setText(reservasi.getJumlahPendaki() + " orang");
 
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
@@ -326,6 +325,58 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
         String totalHarga = currencyFormat.format(reservasi.getTotalHarga());
         tvTotalHarga.setText(totalHarga.replace("Rp", "Rp "));
 
+        // Load Pendaki & Barang
+        setupPendakiAndBarang(reservasi, llPendaki, llSampah);
+
+        // --- LOGIC REFUND VISIBILITY ---
+        String status = reservasi.getStatus();
+        layoutInfoRefund.setVisibility(View.GONE);
+        layoutBuktiRefund.setVisibility(View.GONE);
+        btnBatalkan.setVisibility(View.VISIBLE);
+
+        if (status.equals("pengajuan_refund")) {
+            btnBatalkan.setVisibility(View.GONE);
+            layoutInfoRefund.setVisibility(View.VISIBLE);
+            tvStatusRefundText.setText("MENUNGGU PROSES REFUND");
+            String nominal = currencyFormat.format(reservasi.getNominalRefund());
+            tvNominalRefundInfo.setText("Estimasi Pengembalian: " + nominal.replace("Rp", "Rp "));
+            layoutInfoRefund.setBackgroundColor(android.graphics.Color.parseColor("#FFF8E1")); // Kuning
+
+        } else if (status.equals("refund_selesai")) {
+            btnBatalkan.setVisibility(View.GONE);
+            layoutInfoRefund.setVisibility(View.VISIBLE);
+            tvStatusRefundText.setText("DANA DIKEMBALIKAN");
+            tvNominalRefundInfo.setText("Silakan cek rekening Anda.");
+            layoutInfoRefund.setBackgroundColor(android.graphics.Color.parseColor("#E8F5E9")); // Hijau
+
+            if (reservasi.getBuktiRefund() != null && !reservasi.getBuktiRefund().isEmpty()) {
+                layoutBuktiRefund.setVisibility(View.VISIBLE);
+                Glide.with(this)
+                        .load(reservasi.getBuktiRefund())
+                        .centerCrop()
+                        .placeholder(android.R.color.darker_gray)
+                        .into(imgBuktiRefund);
+
+                btnLihatBuktiFull.setOnClickListener(v -> {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse(reservasi.getBuktiRefund()), "image/*");
+                    startActivity(intent);
+                });
+            }
+        } else if (status.equals("dibatalkan") || status.equals("selesai")) {
+            btnBatalkan.setVisibility(View.GONE);
+        }
+
+        btnBatalkan.setOnClickListener(v -> {
+            dialog.dismiss();
+            handleTombolBatal(reservasi);
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private void setupPendakiAndBarang(Reservasi reservasi, LinearLayout llPendaki, LinearLayout llSampah) {
         llPendaki.removeAllViews();
         if (reservasi.getPendakiRombongan() != null && !reservasi.getPendakiRombongan().isEmpty()) {
             for (PendakiRombongan pendaki : reservasi.getPendakiRombongan()) {
@@ -334,9 +385,8 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
                 llPendaki.addView(tv);
             }
         } else {
-            TextView tvKosong = new TextView(getContext());
-            tvKosong.setText("Data rombongan tidak ditemukan.");
-            llPendaki.addView(tvKosong);
+            TextView tv = new TextView(getContext());
+            tv.setText("-"); llPendaki.addView(tv);
         }
 
         llSampah.removeAllViews();
@@ -347,12 +397,100 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
                 llSampah.addView(tv);
             }
         } else {
-            TextView tvKosong = new TextView(getContext());
-            tvKosong.setText("Data sampah tidak ditemukan.");
-            llSampah.addView(tvKosong);
+            TextView tv = new TextView(getContext());
+            tv.setText("-"); llSampah.addView(tv);
+        }
+    }
+
+    // =========================================================================
+    //  METHOD 1: LOGIC PENGECEKAN H-SEKIAN
+    // =========================================================================
+    private void handleTombolBatal(Reservasi data) {
+        if (data.getStatus().equals("menunggu_pembayaran")) {
+            // Kalau belum bayar, kamu bisa tambahkan API khusus pembatalan langsung
+            Toast.makeText(requireContext(), "Silakan tunggu timeout sistem.", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        btnClose.setOnClickListener(v -> dialog.dismiss());
+        RefundHelper.RefundResult hasil = RefundHelper.hitungRefund(data.getTanggalPendakian(), data.getTotalHarga());
+
+        if (!hasil.isRefundable) {
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Tidak Dapat Refund")
+                    .setMessage(hasil.pesan)
+                    .setPositiveButton("Mengerti", null)
+                    .show();
+            return;
+        }
+
+        showDialogAjukanRefund(data.getIdReservasi(), hasil);
+    }
+
+    // =========================================================================
+    //  METHOD 2: TAMPILKAN DIALOG FORM (FIXED: long idReservasi)
+    // =========================================================================
+    private void showDialogAjukanRefund(long idReservasi, RefundHelper.RefundResult hasil) {
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_ajukan_refund, null);
+
+        TextView tvEstimasi = view.findViewById(R.id.tv_estimasi_refund);
+        TextView tvPersen = view.findViewById(R.id.tv_persentase_refund);
+        TextInputEditText etAlasan = view.findViewById(R.id.et_alasan);
+        TextInputEditText etBank = view.findViewById(R.id.et_bank);
+        TextInputEditText etRek = view.findViewById(R.id.et_rekening);
+        TextInputEditText etNama = view.findViewById(R.id.et_atas_nama);
+        Button btnBatal = view.findViewById(R.id.btn_batal_dialog);
+        Button btnKirim = view.findViewById(R.id.btn_kirim_refund);
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
+        String nominalStr = currencyFormat.format(hasil.nominal).replace("Rp", "Rp ");
+        tvEstimasi.setText("Estimasi Refund: " + nominalStr);
+        tvPersen.setText(hasil.pesan);
+
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+        builder.setView(view);
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        btnBatal.setOnClickListener(v -> dialog.dismiss());
+
+        btnKirim.setOnClickListener(v -> {
+            String alasan = etAlasan.getText().toString();
+            String bank = etBank.getText().toString();
+            String rek = etRek.getText().toString();
+            String nama = etNama.getText().toString();
+
+            if(alasan.isEmpty() || bank.isEmpty() || rek.isEmpty() || nama.isEmpty()){
+                Toast.makeText(requireContext(), "Mohon lengkapi semua data!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Kirim ke API (Passing ID sebagai long)
+            sendRefundRequest(idReservasi, alasan, bank, rek, nama, hasil.persentase, hasil.nominal, dialog);
+        });
+
         dialog.show();
+    }
+    // =========================================================================
+    //  METHOD 3: KIRIM KE SUPABASE (FIXED: long idReservasi & casting)
+    // =========================================================================
+    private void sendRefundRequest(long idReservasi, String alasan, String bank, String rek, String nama, int persentase, long nominal, androidx.appcompat.app.AlertDialog dialog) {
+        // Casting (int) disini aman jika SupabaseAuth masih pakai int.
+        // Jika SupabaseAuth sudah diupdate jadi long, hapus (int)-nya.
+        SupabaseAuth.ajukanRefund((int) idReservasi, alasan, bank, rek, nama, persentase, nominal, new SupabaseAuth.GeneralCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(requireContext(), "Permintaan Refund Terkirim!", Toast.LENGTH_LONG).show();
+                dialog.dismiss();
+                loadTransaksiData();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(requireContext(), "Gagal: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

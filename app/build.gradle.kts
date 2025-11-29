@@ -78,10 +78,10 @@ dependencies {
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-// WAJIB: Untuk LiveData (MutableLiveData)
+    // WAJIB: Untuk LiveData (MutableLiveData)
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
-// UNTUK UPLOAD FILE: Diperlukan oleh SupabaseAuth
+    // UNTUK UPLOAD FILE: Diperlukan oleh SupabaseAuth
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     // OpenStreetMap alternative
     implementation("org.osmdroid:osmdroid-android:6.1.18")

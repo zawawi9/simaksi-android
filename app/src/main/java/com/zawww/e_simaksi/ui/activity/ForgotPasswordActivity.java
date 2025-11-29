@@ -81,7 +81,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         setLoading(true);
 
-        SupabaseAuth.sendPasswordReset(email, new SupabaseAuth.UpdateCallback() {
+        SupabaseAuth.sendPasswordResetOtp(email, new SupabaseAuth.UpdateCallback() {
             @Override
             public void onSuccess() {
                 setLoading(false);
@@ -122,26 +122,12 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         setLoading(true);
 
-        // 1. Verifikasi OTP dulu
-        SupabaseAuth.verifyRecoveryOtp(email, otp, new SupabaseAuth.AuthCallback() {
+        SupabaseAuth.resetPasswordWithOtp(email, otp, newPass, new SupabaseAuth.UpdateCallback() {
             @Override
-            public void onSuccess(String accessToken, String userId, String refreshToken) {
-
-                // 2. Jika OTP Benar -> Update Password
-                SupabaseAuth.updateUserPassword(accessToken, newPass, new SupabaseAuth.UpdateCallback() {
-                    @Override
-                    public void onSuccess() {
-                        setLoading(false);
-                        Toast.makeText(ForgotPasswordActivity.this, "Password Berhasil Diubah! Silakan Login.", Toast.LENGTH_LONG).show();
-                        finish(); // Tutup activity, balik ke login
-                    }
-
-                    @Override
-                    public void onError(String message) {
-                        setLoading(false);
-                        Toast.makeText(ForgotPasswordActivity.this, "Gagal Update Password: " + message, Toast.LENGTH_SHORT).show();
-                    }
-                });
+            public void onSuccess() {
+                setLoading(false);
+                Toast.makeText(ForgotPasswordActivity.this, "Password Berhasil Diubah! Silakan Login.", Toast.LENGTH_LONG).show();
+                finish(); // Tutup activity, balik ke login
             }
 
             @Override

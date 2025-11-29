@@ -21,8 +21,8 @@ import com.zawww.e_simaksi.util.SessionManager;
 
 public class UbahPasswordFragment extends Fragment {
 
-    private TextInputEditText etEmail;
-    private Button btnKirimTautan;
+    private TextInputEditText etEmail, etOtp, etNewPassword, etConfirmNewPassword;
+    private Button btnKirimOtp, btnUbahPassword;
     private ImageButton btnBack;
     private ProgressBar progressBar;
 
@@ -42,13 +42,16 @@ public class UbahPasswordFragment extends Fragment {
         initViews(view);
         setupListeners();
 
-        // Set email from session
         etEmail.setText(sessionManager.getUserEmail());
     }
 
     private void initViews(View view) {
         etEmail = view.findViewById(R.id.et_email);
-        btnKirimTautan = view.findViewById(R.id.btn_kirim_tautan);
+        etOtp = view.findViewById(R.id.et_otp);
+        etNewPassword = view.findViewById(R.id.et_new_password);
+        etConfirmNewPassword = view.findViewById(R.id.et_confirm_new_password);
+        btnKirimOtp = view.findViewById(R.id.btn_kirim_otp);
+        btnUbahPassword = view.findViewById(R.id.btn_ubah_password);
         btnBack = view.findViewById(R.id.btn_back);
         progressBar = view.findViewById(R.id.progress_bar);
     }
@@ -56,17 +59,59 @@ public class UbahPasswordFragment extends Fragment {
     private void setupListeners() {
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
-        btnKirimTautan.setOnClickListener(v -> {
-            sendPasswordResetLink();
+        btnKirimOtp.setOnClickListener(v -> sendOtp());
+        btnUbahPassword.setOnClickListener(v -> changePassword());
+    }
+
+    private void sendOtp() {
+        String email = etEmail.getText().toString().trim();
+        if (email.isEmpty()) {
+            Toast.makeText(getContext(), "Email tidak boleh kosong", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        showLoading(true);
+
+        SupabaseAuth.sendPasswordResetOtp(email, new SupabaseAuth.UpdateCallback() {
+            @Override
+            public void onSuccess() {
+                if (getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    showLoading(false);
+                    Toast.makeText(getContext(), "OTP telah dikirim ke email Anda", Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                if (getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    showLoading(false);
+                    Toast.makeText(getContext(), "Gagal mengirim OTP: " + errorMessage, Toast.LENGTH_LONG).show();
+                });
+            }
         });
     }
 
-    private void sendPasswordResetLink() {
-        showLoading(true);
-        String email = sessionManager.getUserEmail();
+    private void changePassword() {
+        String email = etEmail.getText().toString().trim();
+        String otp = etOtp.getText().toString().trim();
+        String newPassword = etNewPassword.getText().toString();
+        String confirmNewPassword = etConfirmNewPassword.getText().toString();
 
-        // This method will be created in a later step
-        SupabaseAuth.sendPasswordReset(email, new SupabaseAuth.UpdateCallback() {
+        if (otp.isEmpty() || newPassword.isEmpty() || confirmNewPassword.isEmpty()) {
+            Toast.makeText(getContext(), "Semua field harus diisi", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!newPassword.equals(confirmNewPassword)) {
+            Toast.makeText(getContext(), "Password baru tidak cocok", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        showLoading(true);
+
+        SupabaseAuth.resetPasswordWithOtp(email, otp, newPassword, new SupabaseAuth.UpdateCallback() {
             @Override
             public void onSuccess() {
                 if (getActivity() == null) return;
@@ -81,7 +126,7 @@ public class UbahPasswordFragment extends Fragment {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
                     showLoading(false);
-                    Toast.makeText(getContext(), "Gagal: " + errorMessage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Gagal mengubah password: " + errorMessage, Toast.LENGTH_LONG).show();
                 });
             }
         });
@@ -89,10 +134,11 @@ public class UbahPasswordFragment extends Fragment {
 
     private void showSuccessDialog() {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Tautan Terkirim")
-                .setMessage("Tautan untuk mengatur ulang kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk Anda.")
+                .setTitle("Password Berhasil Diubah")
+                .setMessage("Password Anda telah berhasil diubah. Silakan login kembali.")
                 .setPositiveButton("OK", (dialog, which) -> {
                     dialog.dismiss();
+                    // Optionally, navigate back to profile or login screen
                     requireActivity().getSupportFragmentManager().popBackStack();
                 })
                 .show();
@@ -100,6 +146,11 @@ public class UbahPasswordFragment extends Fragment {
 
     private void showLoading(boolean isLoading) {
         progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        btnKirimTautan.setEnabled(!isLoading);
+        btnKirimOtp.setEnabled(!isLoading);
+        btnUbahPassword.setEnabled(!isLoading);
+        etEmail.setEnabled(!isLoading);
+        etOtp.setEnabled(!isLoading);
+        etNewPassword.setEnabled(!isLoading);
+        etConfirmNewPassword.setEnabled(!isLoading);
     }
 }
