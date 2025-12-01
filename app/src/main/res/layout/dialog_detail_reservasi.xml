@@ -299,7 +299,7 @@
                     android:layout_height="wrap_content"
                     android:text="LIHAT BUKTI FULL"
                     android:layout_marginTop="8dp"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                    style="@style/Widget.App.Button.Solid"/>
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -431,12 +431,12 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_batalkan_pesanan"
+                style="@style/Widget.App.Button.Solid"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:text="BATALKAN PESANAN"
                 android:textStyle="bold"
                 android:backgroundTint="#D32F2F"
-                app:cornerRadius="12dp"
                 android:layout_marginBottom="16dp"/>
         </LinearLayout>
     </ScrollView>

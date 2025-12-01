@@ -127,27 +127,30 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
 
         private void setStatusColor(String status) {
             if (status != null) {
-                int color;
+                int colorResId;
                 switch (status.toLowerCase()) {
-                    case "terkonfirmasi":
-                        color = R.color.hijau_tua_brand; // Or your specific success color
-                        break;
                     case "menunggu_pembayaran":
-                        color = R.color.menunggu_pembayaran;
+                        colorResId = R.color.status_menunggu_pembayaran;
+                        break;
+                    case "terkonfirmasi":
+                        colorResId = R.color.status_terkonfirmasi;
                         break;
                     case "dibatalkan":
-                        color = R.color.dibatalkan;
+                        colorResId = R.color.status_dibatalkan;
                         break;
-                    case "selesai":
-                        color = R.color.selesai;
+                    case "pengajuan_refund":
+                        colorResId = R.color.status_pengajuan_refund;
+                        break;
+                    case "refund_selesai":
+                        colorResId = R.color.status_refund_selesai;
                         break;
                     default:
-                        // Fallback color for unknown statuses, consider defining a specific default_status_color
-                        color = R.color.black; // Placeholder if no specific default is defined
+                        colorResId = R.color.black; // Fallback color
                         break;
                 }
-                tvTransaksiStatus.setBackgroundResource(R.drawable.bg_status_badge);
-                tvTransaksiStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(itemView.getContext().getColor(color)));
+                tvTransaksiStatus.setBackgroundResource(R.drawable.bg_status_badge); // Keep generic badge drawable
+                tvTransaksiStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(itemView.getContext().getColor(colorResId)));
+                tvTransaksiStatus.setTextColor(itemView.getContext().getColor(R.color.white)); // Ensure text is white for contrast
             }
         }
     }

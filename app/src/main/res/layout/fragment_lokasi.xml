@@ -152,17 +152,13 @@
 
                     <Button
                         android:id="@+id/btn_mulai_navigasi"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        style="@style/Widget.App.Button.Solid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
                         android:padding="12dp"
                         android:text="Mulai Navigasi ke Basecamp Kucur"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        app:backgroundTint="#FF004D40"
-                        app:cornerRadius="24dp"
-                        app:strokeColor="#FFFFFF" />
+                        android:textSize="16sp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

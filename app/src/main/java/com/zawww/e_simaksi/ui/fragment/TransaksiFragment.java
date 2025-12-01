@@ -473,239 +473,417 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
 
     // =========================================================================
 
-    private void showDetailDialog(Reservasi reservasi) {
+        private void showDetailDialog(Reservasi reservasi) {
 
-        if (getContext() == null) return;
+            if (getContext() == null) return;
 
+    
 
+            final Dialog dialog = new Dialog(getContext());
 
-        final Dialog dialog = new Dialog(getContext());
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.dialog_detail_reservasi);
 
-        dialog.setContentView(R.layout.dialog_detail_reservasi);
+    
 
+            if (dialog.getWindow() != null) {
 
+                dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        if (dialog.getWindow() != null) {
-
-            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-
-        }
-
-
-
-        // Init Components
-
-        ImageView btnClose = dialog.findViewById(R.id.btn_close_dialog);
-
-        TextView tvKode = dialog.findViewById(R.id.tv_detail_kode);
-
-        TextView tvTanggal = dialog.findViewById(R.id.tv_detail_tanggal);
-
-        TextView tvDipesan = dialog.findViewById(R.id.tv_detail_dipesan_pada);
-
-        TextView tvStatus = dialog.findViewById(R.id.tv_detail_status);
-
-        TextView tvStatusSampah = dialog.findViewById(R.id.tv_detail_status_sampah);
-
-        LinearLayout llPendaki = dialog.findViewById(R.id.ll_container_pendaki);
-
-        LinearLayout llSampah = dialog.findViewById(R.id.ll_container_sampah);
-
-        TextView tvJmlPendaki = dialog.findViewById(R.id.tv_detail_jumlah_pendaki);
-
-        TextView tvTiketParkir = dialog.findViewById(R.id.tv_detail_tiket_parkir);
-
-        TextView tvTotalHarga = dialog.findViewById(R.id.tv_detail_total_harga);
-
-
-
-        // Komponen Refund UI
-
-        LinearLayout layoutInfoRefund = dialog.findViewById(R.id.layout_info_refund);
-
-        TextView tvStatusRefundText = dialog.findViewById(R.id.tv_status_refund_text);
-
-        TextView tvNominalRefundInfo = dialog.findViewById(R.id.tv_nominal_refund_info);
-
-
-
-        LinearLayout layoutBuktiRefund = dialog.findViewById(R.id.layout_bukti_refund);
-
-        ImageView imgBuktiRefund = dialog.findViewById(R.id.img_bukti_refund);
-
-        MaterialButton btnLihatBuktiFull = dialog.findViewById(R.id.btn_lihat_bukti_full);
-
-        MaterialButton btnBatalkan = dialog.findViewById(R.id.btn_batalkan_pesanan);
-
-
-
-        // --- SET DATA ---
-
-        tvKode.setText(reservasi.getKodeReservasi());
-
-
-
-        // Format tanggal
-
-        String tanggalPendakianFormatted = reservasi.getTanggalPendakian();
-
-        try {
-
-            SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-            Date date = inputSdf.parse(reservasi.getTanggalPendakian());
-
-            if (date != null) {
-
-                SimpleDateFormat outputSdf = new SimpleDateFormat("dd MMMM yyyy", new Locale("id", "ID"));
-
-                tanggalPendakianFormatted = outputSdf.format(date);
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
             }
 
-        } catch (ParseException e) { e.printStackTrace(); }
+    
 
-        tvTanggal.setText(tanggalPendakianFormatted);
+            // Init Components
 
+            ImageView btnClose = dialog.findViewById(R.id.btn_close_dialog);
 
+            TextView tvKode = dialog.findViewById(R.id.tv_detail_kode);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            TextView tvTanggal = dialog.findViewById(R.id.tv_detail_tanggal);
 
-            tvDipesan.setText(DateUtil.formatDate(reservasi.getDipesanPada()));
+            TextView tvDipesan = dialog.findViewById(R.id.tv_detail_dipesan_pada);
 
-        } else {
+    
 
-            tvDipesan.setText(reservasi.getDipesanPada());
+            // Status Reservasi
 
-        }
+            TextView tvStatus = dialog.findViewById(R.id.tv_detail_status);
 
+            CardView cvStatus = (CardView) tvStatus.getParent().getParent(); // Get parent CardView
 
+    
 
-        tvStatus.setText(reservasi.getStatus().replace("_", " ").toUpperCase());
+            // Status Sampah
 
-        tvStatusSampah.setText(reservasi.getStatusSampah());
+            TextView tvStatusSampah = dialog.findViewById(R.id.tv_detail_status_sampah);
 
-        tvJmlPendaki.setText(reservasi.getJumlahPendaki() + " orang");
+            CardView cvStatusSampah = (CardView) tvStatusSampah.getParent().getParent(); // Get parent CardView
 
+    
 
+            LinearLayout llPendaki = dialog.findViewById(R.id.ll_container_pendaki);
 
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
+            LinearLayout llSampah = dialog.findViewById(R.id.ll_container_sampah);
 
-        String hargaParkir = currencyFormat.format(reservasi.getJumlahTiketParkir() * 5000L);
+            TextView tvJmlPendaki = dialog.findViewById(R.id.tv_detail_jumlah_pendaki);
 
-        tvTiketParkir.setText(hargaParkir.replace("Rp", "Rp "));
+            TextView tvTiketParkir = dialog.findViewById(R.id.tv_detail_tiket_parkir);
 
+            TextView tvTotalHarga = dialog.findViewById(R.id.tv_detail_total_harga);
 
+    
 
-        String totalHarga = currencyFormat.format(reservasi.getTotalHarga());
+            // Komponen Refund UI
 
-        tvTotalHarga.setText(totalHarga.replace("Rp", "Rp "));
+            LinearLayout layoutInfoRefund = dialog.findViewById(R.id.layout_info_refund);
 
+            TextView tvStatusRefundText = dialog.findViewById(R.id.tv_status_refund_text);
 
+            TextView tvNominalRefundInfo = dialog.findViewById(R.id.tv_nominal_refund_info);
 
-        // Load Pendaki & Barang
+    
 
-        setupPendakiAndBarang(reservasi, llPendaki, llSampah);
+            LinearLayout layoutBuktiRefund = dialog.findViewById(R.id.layout_bukti_refund);
 
+            ImageView imgBuktiRefund = dialog.findViewById(R.id.img_bukti_refund);
 
+            MaterialButton btnLihatBuktiFull = dialog.findViewById(R.id.btn_lihat_bukti_full);
 
-        // --- LOGIC REFUND VISIBILITY ---
+            MaterialButton btnBatalkan = dialog.findViewById(R.id.btn_batalkan_pesanan);
 
-        String status = reservasi.getStatus();
+    
 
-        layoutInfoRefund.setVisibility(View.GONE);
+            // --- SET DATA ---
 
-        layoutBuktiRefund.setVisibility(View.GONE);
+            tvKode.setText(reservasi.getKodeReservasi());
 
-        btnBatalkan.setVisibility(View.VISIBLE);
+    
 
+            // Format tanggal
 
+            String tanggalPendakianFormatted = reservasi.getTanggalPendakian();
 
-        if (status.equals("pengajuan_refund")) {
+            try {
 
-            btnBatalkan.setVisibility(View.GONE);
+                SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-            layoutInfoRefund.setVisibility(View.VISIBLE);
+                Date date = inputSdf.parse(reservasi.getTanggalPendakian());
 
-            tvStatusRefundText.setText("MENUNGGU PROSES REFUND");
+                if (date != null) {
 
-            String nominal = currencyFormat.format(reservasi.getNominalRefund());
+                    SimpleDateFormat outputSdf = new SimpleDateFormat("dd MMMM yyyy", new Locale("id", "ID"));
 
-            tvNominalRefundInfo.setText("Estimasi Pengembalian: " + nominal.replace("Rp", "Rp "));
+                    tanggalPendakianFormatted = outputSdf.format(date);
 
-            layoutInfoRefund.setBackgroundColor(android.graphics.Color.parseColor("#FFF8E1")); // Kuning
+                }
 
+            } catch (ParseException e) { e.printStackTrace(); }
 
+            tvTanggal.setText(tanggalPendakianFormatted);
 
-        } else if (status.equals("refund_selesai")) {
+    
 
-            btnBatalkan.setVisibility(View.GONE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            layoutInfoRefund.setVisibility(View.VISIBLE);
+                tvDipesan.setText(DateUtil.formatDate(reservasi.getDipesanPada()));
 
-            tvStatusRefundText.setText("DANA DIKEMBALIKAN");
+            } else {
 
-            tvNominalRefundInfo.setText("Silakan cek rekening Anda.");
-
-            layoutInfoRefund.setBackgroundColor(android.graphics.Color.parseColor("#E8F5E9")); // Hijau
-
-
-
-            if (reservasi.getBuktiRefund() != null && !reservasi.getBuktiRefund().isEmpty()) {
-
-                layoutBuktiRefund.setVisibility(View.VISIBLE);
-
-                Glide.with(this)
-
-                        .load(reservasi.getBuktiRefund())
-
-                        .centerCrop()
-
-                        .placeholder(android.R.color.darker_gray)
-
-                        .into(imgBuktiRefund);
-
-
-
-                btnLihatBuktiFull.setOnClickListener(v -> {
-
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-
-                    intent.setDataAndType(Uri.parse(reservasi.getBuktiRefund()), "image/*");
-
-                    startActivity(intent);
-
-                });
+                tvDipesan.setText(reservasi.getDipesanPada());
 
             }
 
-        } else if (status.equals("dibatalkan") || status.equals("selesai")) {
+    
 
-            btnBatalkan.setVisibility(View.GONE);
+            applyReservationStatusStyling(reservasi.getStatus(), tvStatus, cvStatus);
+
+            applySampahStatusStyling(reservasi.getStatusSampah(), tvStatusSampah, cvStatusSampah);
+
+    
+
+            tvJmlPendaki.setText(reservasi.getJumlahPendaki() + " orang");
+
+    
+
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
+
+            String hargaParkir = currencyFormat.format(reservasi.getJumlahTiketParkir() * 5000L);
+
+            tvTiketParkir.setText(hargaParkir.replace("Rp", "Rp "));
+
+    
+
+            String totalHarga = currencyFormat.format(reservasi.getTotalHarga());
+
+            tvTotalHarga.setText(totalHarga.replace("Rp", "Rp "));
+
+    
+
+            // Load Pendaki & Barang
+
+            setupPendakiAndBarang(reservasi, llPendaki, llSampah);
+
+    
+
+            // --- LOGIC REFUND VISIBILITY ---
+
+            String status = reservasi.getStatus();
+
+            layoutInfoRefund.setVisibility(View.GONE);
+
+            layoutBuktiRefund.setVisibility(View.GONE);
+
+            btnBatalkan.setVisibility(View.VISIBLE);
+
+    
+
+            if (status.equals("pengajuan_refund")) {
+
+                btnBatalkan.setVisibility(View.GONE);
+
+                layoutInfoRefund.setVisibility(View.VISIBLE);
+
+                tvStatusRefundText.setText("MENUNGGU PROSES REFUND");
+
+                String nominal = currencyFormat.format(reservasi.getNominalRefund());
+
+                tvNominalRefundInfo.setText("Estimasi Pengembalian: " + nominal.replace("Rp", "Rp "));
+
+                layoutInfoRefund.setBackgroundColor(requireContext().getColor(R.color.status_pengajuan_refund)); // Set background from colors.xml
+
+                tvStatusRefundText.setTextColor(requireContext().getColor(R.color.white)); // Set text color for contrast
+
+    
+
+            } else if (status.equals("refund_selesai")) {
+
+                btnBatalkan.setVisibility(View.GONE);
+
+                layoutInfoRefund.setVisibility(View.VISIBLE);
+
+                tvStatusRefundText.setText("DANA DIKEMBALIKAN");
+
+                tvNominalRefundInfo.setText("Silakan cek rekening Anda.");
+
+                layoutInfoRefund.setBackgroundColor(requireContext().getColor(R.color.status_refund_selesai)); // Set background from colors.xml
+
+                tvStatusRefundText.setTextColor(requireContext().getColor(R.color.white)); // Set text color for contrast
+
+    
+
+                if (reservasi.getBuktiRefund() != null && !reservasi.getBuktiRefund().isEmpty()) {
+
+                    layoutBuktiRefund.setVisibility(View.VISIBLE);
+
+                    Glide.with(this)
+
+                            .load(reservasi.getBuktiRefund())
+
+                            .centerCrop()
+
+                            .placeholder(android.R.color.darker_gray)
+
+                            .into(imgBuktiRefund);
+
+    
+
+                    btnLihatBuktiFull.setOnClickListener(v -> {
+
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+
+                        intent.setDataAndType(Uri.parse(reservasi.getBuktiRefund()), "image/*");
+
+                        startActivity(intent);
+
+                    });
+
+                }
+
+            } else if (status.equals("dibatalkan") || status.equals("terkonfirmasi")) {
+
+                btnBatalkan.setVisibility(View.GONE);
+
+            }
+
+    
+
+            btnBatalkan.setOnClickListener(v -> {
+
+                dialog.dismiss();
+
+                handleTombolBatal(reservasi);
+
+            });
+
+    
+
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.show();
 
         }
 
+    
 
+        // Helper method to apply styling for reservation status
 
-        btnBatalkan.setOnClickListener(v -> {
+        private void applyReservationStatusStyling(String status, TextView textView, CardView cardView) {
 
-            dialog.dismiss();
+            String displayText = status.replace("_", " ").toUpperCase();
 
-            handleTombolBatal(reservasi);
+            textView.setText(displayText);
 
-        });
+    
 
+            int backgroundColorRes;
 
+            int textColorRes = R.color.white; // Default text color for badges
 
-        btnClose.setOnClickListener(v -> dialog.dismiss());
+    
 
-        dialog.show();
+            switch (status.toLowerCase()) {
 
-    }
+                case "menunggu_pembayaran":
+
+                    backgroundColorRes = R.color.status_menunggu_pembayaran;
+
+                    break;
+
+                case "terkonfirmasi":
+
+                    backgroundColorRes = R.color.status_terkonfirmasi;
+
+                    break;
+
+                case "dibatalkan":
+
+                    backgroundColorRes = R.color.status_dibatalkan;
+
+                    break;
+
+                case "pengajuan_refund":
+
+                    backgroundColorRes = R.color.status_pengajuan_refund;
+
+                    break;
+
+                case "refund_selesai":
+
+                    backgroundColorRes = R.color.status_refund_selesai;
+
+                    break;
+
+                default:
+
+                    backgroundColorRes = R.color.black; // Fallback background color
+
+                    break;
+
+            }
+
+    
+
+            cardView.setCardBackgroundColor(requireContext().getColor(backgroundColorRes));
+
+            textView.setTextColor(requireContext().getColor(textColorRes));
+
+        }
+
+    
+
+            // Helper method to apply styling for sampah status
+
+    
+
+            private void applySampahStatusStyling(String statusSampah, TextView textView, CardView cardView) {
+
+    
+
+                String displayText = statusSampah.replace("_", " ").toUpperCase();
+
+    
+
+                textView.setText(displayText);
+
+    
+
+        
+
+    
+
+                int backgroundColorRes;
+
+    
+
+                int textColorRes = R.color.white; // Default text color for badges
+
+    
+
+        
+
+    
+
+                switch (statusSampah.toLowerCase()) {
+
+    
+
+                    case "sesuai":
+
+    
+
+                        backgroundColorRes = R.color.status_sampah_sesuai;
+
+    
+
+                        break;
+
+    
+
+                    case "tidak sesuai":
+
+    
+
+                        backgroundColorRes = R.color.status_sampah_tidak_sesuai;
+
+    
+
+                        break;
+
+    
+
+                    default:
+
+    
+
+                        backgroundColorRes = R.color.black; // Fallback background color
+
+    
+
+                        break;
+
+    
+
+                }
+
+    
+
+        
+
+    
+
+                cardView.setCardBackgroundColor(requireContext().getColor(backgroundColorRes));
+
+    
+
+                textView.setTextColor(requireContext().getColor(textColorRes));
+
+    
+
+            }
 
 
 

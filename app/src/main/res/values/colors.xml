@@ -16,7 +16,15 @@
     <color name="menu_card_yellow">#FFF8E1</color>
     <color name="menu_card_purple">#F3E5F5</color>
     <color name="menu_card_red">#FFEBEE</color>
-    <color name="dibatalkan">#d62606</color>
-    <color name="selesai">#0e82e8</color>
-    <color name="menunggu_pembayaran">#f7e114</color>
+
+    <!-- Reservation Status Colors -->
+    <color name="status_menunggu_pembayaran">#FFC107</color> <!-- Amber -->
+    <color name="status_terkonfirmasi">#4CAF50</color> <!-- Green -->
+    <color name="status_dibatalkan">#F44336</color> <!-- Red -->
+    <color name="status_pengajuan_refund">#FF9800</color> <!-- Orange -->
+    <color name="status_refund_selesai">#2196F3</color> <!-- Blue -->
+
+    <!-- Sampah Status Colors -->
+    <color name="status_sampah_sesuai">#4CAF50</color> <!-- Green -->
+    <color name="status_sampah_tidak_sesuai">#F44336</color> <!-- Red -->
 </resources>

@@ -201,7 +201,7 @@ public class ReservasiStep3Fragment extends Fragment {
 
             AutoCompleteTextView spinner = barangView.findViewById(R.id.spinner_jenis_sampah);
 
-            String[] jenisSampah = new String[] {"PLASTIK", "LOGAM", "KACA", "LAINNYA"};
+            String[] jenisSampah = new String[] {"Organik", "Anorganik"};
 
             ArrayAdapter<String> adapter = new ArrayAdapter<>(
 
