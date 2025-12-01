@@ -29,7 +29,6 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_nama_barang"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColorHint="#E0E0E0"
@@ -54,7 +53,6 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_jumlah_barang"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -73,7 +71,6 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/spinner_layout_jenis"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1.5"

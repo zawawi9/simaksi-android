@@ -85,7 +85,6 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textFieldFullName"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
@@ -101,7 +100,6 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textFieldEmail"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -117,7 +115,6 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textFieldPassword"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -134,7 +131,6 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textFieldConfirmPassword"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -151,7 +147,6 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textFieldToken"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"

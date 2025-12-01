@@ -90,7 +90,6 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_tanggal_masuk"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/reservasi_tanggal_masuk_hint"
@@ -112,7 +111,6 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_tanggal_keluar"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -135,7 +133,6 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_jumlah_pendaki"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -157,7 +154,6 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_jumlah_parkir"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
