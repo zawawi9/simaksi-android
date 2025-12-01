@@ -24,6 +24,9 @@ import com.zawww.e_simaksi.util.SessionManager;
 
 import com.zawww.e_simaksi.ui.activity.MainActivity;
 
+import com.google.android.material.snackbar.Snackbar;
+import com.zawww.e_simaksi.util.ErrorHandler;
+
 public class LoginActivity extends AppCompatActivity {
 
     TextInputLayout textFieldUsername, textFieldPassword;
@@ -92,7 +95,7 @@ public class LoginActivity extends AppCompatActivity {
                 public void onError(String errorMessage) {
                     progressBar.setVisibility(View.GONE);
                     buttonLogin.setEnabled(true);
-                    showErrorDialog(errorMessage);
+                    ErrorHandler.showError(findViewById(android.R.id.content), errorMessage);
                 }
             });
         });
@@ -112,13 +115,5 @@ public class LoginActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
             return insets;
         });
-    }
-    private void showErrorDialog(String message) {
-        new AlertDialog.Builder(this)
-                .setTitle("Gagal Login")
-                .setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                .show();
     }
 }

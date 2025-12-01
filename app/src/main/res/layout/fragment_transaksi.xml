@@ -163,22 +163,22 @@
     <!-- Empty State -->
     <LinearLayout
         android:id="@+id/layout_empty_state"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="32dp"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@+id/filter_card"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
 
         <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:alpha="0.5"
-            android:src="@drawable/ic_receipt_empty" />
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_receipt_empty"
+            app:tint="#CCCCCC" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -193,8 +193,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:gravity="center"
-            android:text="Transaksi yang cocok dengan filter Anda akan muncul di sini."
+            android:text="Riwayat transaksi Anda akan muncul di sini."
+            android:textAlignment="center"
             android:textColor="#555555"
             android:textSize="14sp" />
     </LinearLayout>

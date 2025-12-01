@@ -12,6 +12,8 @@ import com.zawww.e_simaksi.model.PendakiRombongan;
 import com.zawww.e_simaksi.model.Profile;
 import com.zawww.e_simaksi.model.Promosi;
 import com.zawww.e_simaksi.model.Reservasi;
+import com.zawww.e_simaksi.model.Pengumuman;
+
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +56,8 @@ public class SupabaseAuth {
     private static final StorageService storageService = retrofit.create(StorageService.class);
     private static final PengaturanBiayaService pengaturanBiayaService = retrofit.create(PengaturanBiayaService.class);
     public static final FunctionService functionService = retrofit.create(FunctionService.class);
+    private static final PengumumanService pengumumanService = retrofit.create(PengumumanService.class);
+
 
     // =============================================================================================
     // BAGIAN 1: AUTHENTICATION (Login, Register, Reset Password, Verify)
@@ -297,6 +301,24 @@ public class SupabaseAuth {
     // BAGIAN 2: FITUR UTAMA (Profile, Reservasi, Promosi, Upload, dll)
     // =============================================================================================
 
+    public static void getAktifPengumuman(PengumumanCallback callback) {
+        pengumumanService.getAktifPengumuman().enqueue(new Callback<List<com.zawww.e_simaksi.model.Pengumuman>>() {
+            @Override
+            public void onResponse(Call<List<com.zawww.e_simaksi.model.Pengumuman>> call, Response<List<com.zawww.e_simaksi.model.Pengumuman>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Gagal mengambil pengumuman.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<com.zawww.e_simaksi.model.Pengumuman>> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
     public static void getPromosiPoster(PromosiCallback callback) {
         promosiService.getPromosiAktif().enqueue(new Callback<List<Promosi>>() {
             @Override
@@ -415,6 +437,27 @@ public class SupabaseAuth {
             @Override
             public void onFailure(Call<List<KuotaHarian>> call, Throwable t) {
                 callback.onError(t.getMessage());
+            }
+        });
+    }
+
+    public static void getKuotaMingguan(KuotaListCallback callback) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        String todayString = today.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        kuotaService.getKuotaMingguan("gte." + todayString).enqueue(new Callback<List<KuotaHarian>>() {
+            @Override
+            public void onResponse(Call<List<KuotaHarian>> call, Response<List<KuotaHarian>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Gagal mengambil data kuota.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<KuotaHarian>> call, Throwable t) {
+                callback.onError("Koneksi gagal: " + t.getMessage());
             }
         });
     }
@@ -737,8 +780,13 @@ public class SupabaseAuth {
 
     public interface KuotaService {
         @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
-        @GET("rest/v1/kuota_harian?select=kuota_maksimal,kuota_terpesan")
+        @GET("rest/v1/kuota_harian?select=kuota_maksimal,kuota_terpesan,tanggal_kuota&order=tanggal_kuota.asc")
         Call<List<KuotaHarian>> getKuota(@Query("tanggal_kuota") String tanggalQuery);
+
+        @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @GET("rest/v1/kuota_harian?select=kuota_maksimal,kuota_terpesan,tanggal_kuota&order=tanggal_kuota.asc")
+        Call<List<KuotaHarian>> getKuotaMingguan(@Query("tanggal_kuota") String tanggalQuery);
+
 
         @Headers({"Content-Type: application/json", "apikey: " + API_KEY})
         @POST("rest/v1/rpc/cek_dan_ambil_kuota")
@@ -763,6 +811,13 @@ public class SupabaseAuth {
         Call<JsonObject> getPaymentToken(@Body Map<String, Object> body);
     }
 
+    public interface PengumumanService {
+        @Headers({"apikey: " + API_KEY, "Authorization: Bearer " + API_KEY})
+        @GET("rest/v1/pengumuman?telah_terbit=eq.true&end_date=gte.now()&order=dibuat_pada.desc")
+        Call<List<Pengumuman>> getAktifPengumuman();
+    }
+
+
     // =============================================================================================
     // BAGIAN 4: CALLBACKS
     // =============================================================================================
@@ -774,6 +829,7 @@ public class SupabaseAuth {
     public interface DetailReservasiCallback { void onSuccess(Reservasi reservasi); void onError(String errorMessage); }
     public interface ReservasiCallback { void onSuccess(List<Reservasi> reservasiList); void onError(String errorMessage); }
     public interface KuotaCallback { void onSuccess(KuotaHarian kuota); void onError(String errorMessage); }
+    public interface KuotaListCallback { void onSuccess(List<KuotaHarian> kuota); void onError(String errorMessage); }
     public interface UploadCallback { void onSuccess(String publicUrl); void onError(String errorMessage); }
     public interface UpdateCallback { void onSuccess(); void onError(String errorMessage); }
     public interface GeneralCallback { void onSuccess(); void onError(String errorMessage); }
@@ -781,4 +837,8 @@ public class SupabaseAuth {
     public interface ProfileCallback { void onSuccess(Profile profile); void onError(String errorMessage); }
     public interface HitungReservasiCallback { void onSuccess(com.zawww.e_simaksi.model.HitungReservasiResponse response); void onError(String errorMessage); }
     public interface TokenCallback { void onSuccess(String token, String redirectUrl); void onError(String error); }
+    public interface PengumumanCallback {
+        void onSuccess(List<Pengumuman> pengumumanList);
+        void onError(String errorMessage);
+    }
 }

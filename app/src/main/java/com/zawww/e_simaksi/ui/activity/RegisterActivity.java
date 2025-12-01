@@ -18,6 +18,8 @@ import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.util.SessionManager;
 
+import com.zawww.e_simaksi.util.ErrorHandler;
+
 public class RegisterActivity extends AppCompatActivity {
 
     // Komponen UI
@@ -124,7 +126,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onError(String errorMessage) {
                 setLoading(false);
-                Toast.makeText(RegisterActivity.this, "Gagal: " + errorMessage, Toast.LENGTH_LONG).show();
+                ErrorHandler.showError(findViewById(android.R.id.content), errorMessage);
             }
         });
     }
@@ -163,8 +165,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onError(String errorMessage) {
                 setLoading(false);
-                layoutToken.setError(errorMessage); // Tampilkan error di kolom token
-                Toast.makeText(RegisterActivity.this, "Gagal Verifikasi", Toast.LENGTH_SHORT).show();
+                ErrorHandler.showError(findViewById(android.R.id.content), errorMessage);
             }
         });
     }

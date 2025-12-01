@@ -27,11 +27,15 @@ import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.model.BarangBawaanSampah;
 import com.zawww.e_simaksi.model.PendakiRombongan;
-import com.zawww.e_simaksi.model.Promosi;
+
 import com.zawww.e_simaksi.model.Reservasi;
 import com.zawww.e_simaksi.util.SessionManager;
 import com.zawww.e_simaksi.adapter.PromosiSliderAdapter;
+import com.zawww.e_simaksi.model.Promosi;
+
 import com.zawww.e_simaksi.ui.activity.MainActivity;
+import com.zawww.e_simaksi.util.ErrorHandler;
+
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -44,7 +48,7 @@ import java.util.Locale;
 public class HomeFragment extends Fragment {
 
     // --- Konstanta ---
-    private static final String PROMO_DEBUG_TAG = "PROMO_DEBUG";
+    private static final String PROMOSI_SLIDER_DEBUG_TAG = "PROMOSI_SLIDER_DEBUG";
     private static final long SLIDER_DELAY_MS = 5000;
 
     // --- UI Views ---
@@ -92,6 +96,14 @@ public class HomeFragment extends Fragment {
         CardView cardPesanTiket = view.findViewById(R.id.card_pesan_tiket);
         CardView cardCuaca = view.findViewById(R.id.card_cuaca);
         CardView cardLokasi = view.findViewById(R.id.card_lokasi);
+        CardView cardInformasiGunung = view.findViewById(R.id.card_informasi_gunung); // Keep this
+
+
+        cardInformasiGunung.setOnClickListener(v -> { // Keep this
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToFragment(new InformasiGunungFragment());
+            }
+        });
 
         cardLokasi.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
@@ -121,12 +133,10 @@ public class HomeFragment extends Fragment {
         }
 
         // --- Memuat Data ---
-        // 1. Cek apakah ada jadwal aktif
         fetchJadwalAktif();
-
-        // 2. Ambil data untuk slider promosi
         fetchPromosiData();
     }
+
 
     private void fetchJadwalAktif() {
         if (getContext() == null) return;
@@ -175,11 +185,11 @@ public class HomeFragment extends Fragment {
      * Mengambil data promosi untuk slider
      */
     private void fetchPromosiData() {
-        Log.d(PROMO_DEBUG_TAG, "fetchPromosiData() dipanggil.");
+        Log.d(PROMOSI_SLIDER_DEBUG_TAG, "fetchPromosiData() dipanggil.");
         SupabaseAuth.getPromosiPoster(new SupabaseAuth.PromosiCallback() {
             @Override
             public void onSuccess(List<Promosi> data) {
-                Log.d(PROMO_DEBUG_TAG, "onSuccess: Menerima " + data.size() + " data promosi.");
+                Log.d(PROMOSI_SLIDER_DEBUG_TAG, "onSuccess: Menerima " + data.size() + " data promosi.");
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         promosiList.clear();
@@ -191,10 +201,10 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onError(String errorMessage) {
-                Log.e(PROMO_DEBUG_TAG, "onError: Gagal mengambil data - " + errorMessage);
+                Log.e(PROMOSI_SLIDER_DEBUG_TAG, "onError: Gagal mengambil data promosi - " + errorMessage);
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() ->
-                            Toast.makeText(getContext(), "Gagal memuat promosi", Toast.LENGTH_LONG).show());
+                            ErrorHandler.showError(requireView(), "Gagal memuat promosi"));
                 }
             }
         });
@@ -205,13 +215,13 @@ public class HomeFragment extends Fragment {
 
     private void setupSlider() {
         if (getContext() == null || promosiList.isEmpty()) {
-            Log.w(PROMO_DEBUG_TAG, "List promosi kosong, slider disembunyikan.");
+            Log.w(PROMOSI_SLIDER_DEBUG_TAG, "List promosi kosong, slider disembunyikan.");
             viewPagerPromosi.setVisibility(View.GONE);
             layoutDotsIndicator.setVisibility(View.GONE);
             return;
         }
 
-        Log.d(PROMO_DEBUG_TAG, "setupSlider() dipanggil. Ukuran list: " + promosiList.size());
+        Log.d(PROMOSI_SLIDER_DEBUG_TAG, "setupSlider() dipanggil. Ukuran list: " + promosiList.size());
 
         viewPagerPromosi.setVisibility(View.VISIBLE);
         layoutDotsIndicator.setVisibility(View.VISIBLE);
@@ -248,7 +258,7 @@ public class HomeFragment extends Fragment {
 
         // 4. Mulai Auto-Scroll jika gambar lebih dari 1
         if (promosiList.size() > 1) {
-            Log.d(PROMO_DEBUG_TAG, "Memulai auto-slider...");
+            Log.d(PROMOSI_SLIDER_DEBUG_TAG, "Memulai auto-slider...");
             startAutoSlider();
         }
 
@@ -356,6 +366,7 @@ public class HomeFragment extends Fragment {
         this.idReservasiAktif = -1L; // Reset ID
     }
 
+
     // --- BAGIAN DIALOG DETAIL RESERVASI ---
     // (Tidak ada perubahan di sini, semua sudah benar)
 
@@ -365,7 +376,7 @@ public class HomeFragment extends Fragment {
     private void panggilDetailReservasi() {
         if (idReservasiAktif == -1L) {
             if (getContext() != null) {
-                Toast.makeText(getContext(), "Error: ID Reservasi tidak valid", Toast.LENGTH_SHORT).show();
+                ErrorHandler.showError(requireView(), "Error: ID Reservasi tidak valid");
             }
             return;
         }
@@ -391,7 +402,7 @@ public class HomeFragment extends Fragment {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
                     // Sembunyikan loading
-                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                    ErrorHandler.showError(requireView(), errorMessage);
                 });
             }
         });
@@ -425,7 +436,7 @@ public class HomeFragment extends Fragment {
         TextView tvTotalHarga = dialog.findViewById(R.id.tv_detail_total_harga);
 
         tvKode.setText(reservasi.getKodeReservasi());
-        
+
         // Format tanggal pendakian
         String tanggalPendakianFormatted = reservasi.getTanggalPendakian();
         try {

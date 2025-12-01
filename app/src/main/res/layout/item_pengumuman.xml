@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/tv_pengumuman_judul"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Judul Pengumuman"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/tv_pengumuman_konten"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Ini adalah isi dari pengumuman yang akan ditampilkan kepada pengguna."
+        android:textColor="#333333"/>
+
+    <TextView
+        android:id="@+id/tv_pengumuman_tanggal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Berlaku: 28 Nov 2025 - 30 Nov 2025"
+        android:textSize="12sp"
+        android:textStyle="italic"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A000000"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>

@@ -25,6 +25,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zawww.e_simaksi.util.ErrorHandler;
+
 public class EditProfileFragment extends Fragment {
 
     private TextInputEditText etNik, etNamaLengkap, etTanggalLahir, etAlamat, etNomorTelepon;
@@ -153,7 +155,7 @@ public class EditProfileFragment extends Fragment {
                 getActivity().runOnUiThread(() -> {
                     if (isAdded()) {
                         showLoading(false);
-                        Toast.makeText(getContext(), "Gagal memperbarui profil: " + errorMessage, Toast.LENGTH_LONG).show();
+                        ErrorHandler.showError(requireView(), "Gagal memperbarui profil: " + errorMessage);
                     }
                 });
             }

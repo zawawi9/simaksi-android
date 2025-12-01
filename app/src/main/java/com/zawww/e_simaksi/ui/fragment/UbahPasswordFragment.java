@@ -19,6 +19,8 @@ import com.zawww.e_simaksi.R;
 import com.zawww.e_simaksi.api.SupabaseAuth;
 import com.zawww.e_simaksi.util.SessionManager;
 
+import com.zawww.e_simaksi.util.ErrorHandler;
+
 public class UbahPasswordFragment extends Fragment {
 
     private TextInputEditText etEmail, etOtp, etNewPassword, etConfirmNewPassword;
@@ -66,7 +68,7 @@ public class UbahPasswordFragment extends Fragment {
     private void sendOtp() {
         String email = etEmail.getText().toString().trim();
         if (email.isEmpty()) {
-            Toast.makeText(getContext(), "Email tidak boleh kosong", Toast.LENGTH_SHORT).show();
+            ErrorHandler.showError(requireView(), "Email tidak boleh kosong");
             return;
         }
 
@@ -87,7 +89,7 @@ public class UbahPasswordFragment extends Fragment {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
                     showLoading(false);
-                    Toast.makeText(getContext(), "Gagal mengirim OTP: " + errorMessage, Toast.LENGTH_LONG).show();
+                    ErrorHandler.showError(requireView(), "Gagal mengirim OTP: " + errorMessage);
                 });
             }
         });
@@ -100,12 +102,12 @@ public class UbahPasswordFragment extends Fragment {
         String confirmNewPassword = etConfirmNewPassword.getText().toString();
 
         if (otp.isEmpty() || newPassword.isEmpty() || confirmNewPassword.isEmpty()) {
-            Toast.makeText(getContext(), "Semua field harus diisi", Toast.LENGTH_SHORT).show();
+            ErrorHandler.showError(requireView(), "Semua field harus diisi");
             return;
         }
 
         if (!newPassword.equals(confirmNewPassword)) {
-            Toast.makeText(getContext(), "Password baru tidak cocok", Toast.LENGTH_SHORT).show();
+            ErrorHandler.showError(requireView(), "Password baru tidak cocok");
             return;
         }
 
@@ -126,7 +128,7 @@ public class UbahPasswordFragment extends Fragment {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
                     showLoading(false);
-                    Toast.makeText(getContext(), "Gagal mengubah password: " + errorMessage, Toast.LENGTH_LONG).show();
+                    ErrorHandler.showError(requireView(), "Gagal mengubah password: " + errorMessage);
                 });
             }
         });
