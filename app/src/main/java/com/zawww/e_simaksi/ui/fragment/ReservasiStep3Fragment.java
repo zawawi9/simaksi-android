@@ -45,7 +45,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.io.IOException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -594,145 +598,108 @@ public class ReservasiStep3Fragment extends Fragment {
 
 
     private void insertRombonganDanBarang(String bearerToken, Reservasi dataReservasi) {
-
         long idReservasiBaru = dataReservasi.getIdReservasi();
 
-
-
-        // Definisikan aksi untuk memicu pembayaran dalam Runnable
-
         Runnable triggerPayment = () -> {
-
             Log.d("Step3", "Data pendukung berhasil disimpan. Mengambil ulang data reservasi untuk pembayaran...");
-
-            // Ambil ulang data reservasi untuk memastikan data sudah commit sepenuhnya di database
-
             SupabaseAuth.getDetailReservasi((int) idReservasiBaru, new SupabaseAuth.DetailReservasiCallback() {
-
                 @Override
-
                 public void onSuccess(Reservasi reservasiFromDb) {
-
                     Log.d("Step3", "Reservasi terkonfirmasi dari DB. Memulai proses pembayaran.");
-
-                    // Sekarang panggil `reservasiSukses` dengan data yang sudah divalidasi dari DB
-
                     reservasiSukses(reservasiFromDb.getKodeReservasi(), reservasiFromDb.getTotalHarga());
-
                 }
-
-
 
                 @Override
-
                 public void onError(String errorMessage) {
-
                     parentReservasiFragment.showLoading(false);
-
                     ErrorHandler.showError(requireView(), "Gagal memproses pembayaran: " + errorMessage);
-
                     Log.e("Step3", "Gagal mengambil ulang detail reservasi: " + errorMessage);
-
                 }
-
             });
-
         };
 
+        // Error handler
+        java.util.function.Consumer<String> onError = errorMessage -> {
+            parentReservasiFragment.showLoading(false);
+            ErrorHandler.showError(requireView(), errorMessage);
+            Log.e("Step3", "Error selama batch insert: " + errorMessage);
+            // TODO: Pertimbangkan untuk menghapus reservasi yang sudah terbuat sebagian
+        };
+
+        // 1. Insert Rombongan in batches
+        insertDataInBatches(
+                bearerToken,
+                viewModel.listPendaki,
+                SupabaseAuth.reservasiService::insertRombongan,
+                () -> {
+                    // 2. On successful rombongan insertion, insert Barang in batches
+                    insertDataInBatches(
+                            bearerToken,
+                            viewModel.listBarang,
+                            SupabaseAuth.reservasiService::insertBarang,
+                            triggerPayment, // 3. On successful barang insertion, trigger payment
+                            onError
+                    );
+                },
+                onError
+        );
+    }
+
+    private <T> void insertDataInBatches(
+            String bearerToken,
+            List<T> list,
+            java.util.function.BiFunction<String, List<T>, Call<Void>> apiCallFunction,
+            Runnable onComplete,
+            java.util.function.Consumer<String> onError
+    ) {
+        if (list == null || list.isEmpty()) {
+            onComplete.run();
+            return;
+        }
+
+        final int BATCH_SIZE = 20;
+        int totalBatches = (int) Math.ceil((double) list.size() / BATCH_SIZE);
+        AtomicInteger successfulBatches = new AtomicInteger(0);
+        AtomicBoolean hasErrorOccurred = new AtomicBoolean(false);
 
 
-        // Mulai proses insert data pendukung (rombongan dan barang)
+        for (int i = 0; i < list.size(); i += BATCH_SIZE) {
+            int end = Math.min(i + BATCH_SIZE, list.size());
+            List<T> batch = new ArrayList<>(list.subList(i, end));
 
-        SupabaseAuth.reservasiService.insertRombongan(bearerToken, viewModel.listPendaki).enqueue(new Callback<Void>() {
+            apiCallFunction.apply(bearerToken, batch).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                    if (hasErrorOccurred.get()) return;
 
-            @Override
-
-            public void onResponse(Call<Void> call, Response<Void> response) {
-
-                if (!response.isSuccessful()) {
-
-                    parentReservasiFragment.showLoading(false);
-
-                    // TODO: Handle error, mungkin perlu menghapus reservasi yang sudah dibuat
-
-                    Log.e("Step3", "Gagal menyimpan data rombongan.");
-
-                    ErrorHandler.showError(requireView(), "Gagal menyimpan data rombongan.");
-
-                    return;
-
-                }
-
-
-
-                // Jika tidak ada barang, langsung picu pembayaran
-
-                if (viewModel.listBarang.isEmpty()) {
-
-                    triggerPayment.run();
-
-                    return;
-
-                }
-
-
-
-                // Jika ada barang, insert barang dulu baru picu pembayaran
-
-                SupabaseAuth.reservasiService.insertBarang(bearerToken, viewModel.listBarang).enqueue(new Callback<Void>() {
-
-                    @Override
-
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-
-                        if (!response.isSuccessful()) {
-
-                            parentReservasiFragment.showLoading(false);
-
-                             Log.e("Step3", "Gagal menyimpan data barang.");
-
-                            ErrorHandler.showError(requireView(), "Gagal menyimpan data barang.");
-
-                            return;
-
+                    if (response.isSuccessful()) {
+                        if (successfulBatches.incrementAndGet() == totalBatches) {
+                            Log.d("Step3_Batch", "Semua batch berhasil disimpan.");
+                            onComplete.run();
                         }
-
-                        // Setelah semua data berhasil disimpan, picu pembayaran
-
-                        triggerPayment.run();
-
+                    } else {
+                        if (hasErrorOccurred.compareAndSet(false, true)) {
+                            String errorMsg = "Gagal menyimpan batch. Kode: " + response.code() + ", Pesan: " + response.message();
+                             try {
+                                if (response.errorBody() != null) {
+                                    errorMsg += ", Detail: " + response.errorBody().string();
+                                }
+                            } catch (java.io.IOException e) {
+                                Log.e("Step3_Batch", "Error parsing error body", e);
+                            }
+                            onError.accept(errorMsg);
+                        }
                     }
+                }
 
-                    @Override
-
-                    public void onFailure(Call<Void> call, Throwable t) {
-
-                        parentReservasiFragment.showLoading(false);
-
-                        Log.e("Step3", "Koneksi gagal saat menyimpan barang: " + t.getMessage());
-
-                        ErrorHandler.showError(requireView(), "Koneksi gagal saat simpan barang.");
-
+                @Override
+                public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                    if (hasErrorOccurred.compareAndSet(false, true)) {
+                        onError.accept("Koneksi gagal saat menyimpan batch: " + t.getMessage());
                     }
-
-                });
-
-            }
-
-            @Override
-
-            public void onFailure(Call<Void> call, Throwable t) {
-
-                parentReservasiFragment.showLoading(false);
-
-                Log.e("Step3", "Koneksi gagal saat menyimpan rombongan: " + t.getMessage());
-
-                ErrorHandler.showError(requireView(), "Koneksi gagal saat simpan rombongan.");
-
-            }
-
-        });
-
+                }
+            });
+        }
     }
 
 

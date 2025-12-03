@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.zawww.e_simaksi.util.DateUtil;
+import com.zawww.e_simaksi.util.TextUtil;
 import android.os.Build;
 
 public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.TransaksiViewHolder> {
@@ -100,7 +101,7 @@ public class TransaksiAdapter extends RecyclerView.Adapter<TransaksiAdapter.Tran
             tvTransaksiKode.setText(transaksi.getKodeReservasi());
 
             // Status with appropriate color
-            tvTransaksiStatus.setText(transaksi.getStatus());
+            tvTransaksiStatus.setText(TextUtil.formatStatus(transaksi.getStatus()));
             setStatusColor(transaksi.getStatus());
 
             // Conditional visibility for Pay button

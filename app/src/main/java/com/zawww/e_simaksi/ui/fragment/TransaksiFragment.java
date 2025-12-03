@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.cardview.widget.CardView;
 
 import com.bumptech.glide.Glide; // Pastikan library Glide sudah ada
 import com.google.android.material.button.MaterialButton;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+import com.zawww.e_simaksi.util.TextUtil;
 import com.zawww.e_simaksi.util.ErrorHandler;
 
 
@@ -271,87 +273,271 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
 
 
 
-    private void applyFilters() {
-
-        List<Reservasi> filteredList = new ArrayList<>(originalList);
+        private void applyFilters() {
 
 
 
-        // Filter by Status
+            List<Reservasi> filteredList = new ArrayList<>(originalList);
 
-        if (!selectedStatus.equalsIgnoreCase("Semua")) {
 
-            String statusToFilter;
 
-            switch (selectedStatus.toLowerCase()) {
+    
 
-                case "menunggu pembayaran": statusToFilter = "menunggu_pembayaran"; break;
 
-                case "terkonfirmasi": statusToFilter = "terkonfirmasi"; break;
 
-                case "dibatalkan": statusToFilter = "dibatalkan"; break;
+            // Filter by Status
 
-                case "selesai": statusToFilter = "selesai"; break;
 
-                default: statusToFilter = selectedStatus.toLowerCase(); break;
+
+            if (!selectedStatus.equalsIgnoreCase("Semua")) {
+
+
+
+                String statusToFilter;
+
+
+
+                switch (selectedStatus.toLowerCase()) {
+
+
+
+                    case "berhasil":
+
+
+
+                        statusToFilter = "terkonfirmasi";
+
+
+
+                        break;
+
+
+
+                    case "menunggu":
+
+
+
+                        statusToFilter = "menunggu_pembayaran";
+
+
+
+                        break;
+
+
+
+                    case "gagal":
+
+
+
+                        statusToFilter = "dibatalkan";
+
+
+
+                        break;
+
+
+
+                    case "selesai":
+
+
+
+                        statusToFilter = "selesai";
+
+
+
+                        break;
+
+
+
+                    default:
+
+
+
+                        statusToFilter = selectedStatus.toLowerCase();
+
+
+
+                        break;
+
+
+
+                }
+
+
+
+                final String finalStatus = statusToFilter;
+
+
+
+                filteredList = filteredList.stream()
+
+
+
+                        .filter(r -> r.getStatus().toLowerCase().equals(finalStatus))
+
+
+
+                        .collect(Collectors.toList());
+
+
 
             }
 
-            final String finalStatus = statusToFilter;
 
-            filteredList = filteredList.stream()
 
-                    .filter(r -> r.getStatus().toLowerCase().equals(finalStatus))
+    
 
-                    .collect(Collectors.toList());
+
+
+            // Filter by Date
+
+
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+
+
+            if (tglMulaiCalendar != null) {
+
+
+
+                filteredList = filteredList.stream().filter(r -> {
+
+
+
+                    try {
+
+
+
+                        Date tglReservasi = sdf.parse(r.getTanggalPendakian());
+
+
+
+                        // Set time to the start of the day for tglMulaiCalendar
+
+
+
+                        Calendar calMulai = (Calendar) tglMulaiCalendar.clone();
+
+
+
+                        calMulai.set(Calendar.HOUR_OF_DAY, 0);
+
+
+
+                        calMulai.set(Calendar.MINUTE, 0);
+
+
+
+                        calMulai.set(Calendar.SECOND, 0);
+
+
+
+                        calMulai.set(Calendar.MILLISECOND, 0);
+
+
+
+                        return tglReservasi != null && !tglReservasi.before(calMulai.getTime());
+
+
+
+                    } catch (ParseException e) {
+
+
+
+                        return false;
+
+
+
+                    }
+
+
+
+                }).collect(Collectors.toList());
+
+
+
+            }
+
+
+
+            if (tglAkhirCalendar != null) {
+
+
+
+                filteredList = filteredList.stream().filter(r -> {
+
+
+
+                    try {
+
+
+
+                        Date tglReservasi = sdf.parse(r.getTanggalPendakian());
+
+
+
+                        // Set time to the end of the day for tglAkhirCalendar
+
+
+
+                        Calendar calAkhir = (Calendar) tglAkhirCalendar.clone();
+
+
+
+                        calAkhir.set(Calendar.HOUR_OF_DAY, 23);
+
+
+
+                        calAkhir.set(Calendar.MINUTE, 59);
+
+
+
+                        calAkhir.set(Calendar.SECOND, 59);
+
+
+
+                        calAkhir.set(Calendar.MILLISECOND, 999);
+
+
+
+                        return tglReservasi != null && !tglReservasi.after(calAkhir.getTime());
+
+
+
+                    } catch (ParseException e) {
+
+
+
+                        return false;
+
+
+
+                    }
+
+
+
+                }).collect(Collectors.toList());
+
+
+
+            }
+
+
+
+    
+
+
+
+            adapter.updateData(filteredList);
+
+
+
+            showEmptyState(filteredList.isEmpty());
+
+
 
         }
-
-
-
-        // Filter by Date
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-        if (tglMulaiCalendar != null) {
-
-            filteredList = filteredList.stream().filter(r -> {
-
-                try {
-
-                    Date tglReservasi = sdf.parse(r.getTanggalPendakian());
-
-                    return tglReservasi != null && !tglReservasi.before(tglMulaiCalendar.getTime());
-
-                } catch (ParseException e) { return false; }
-
-            }).collect(Collectors.toList());
-
-        }
-
-        if (tglAkhirCalendar != null) {
-
-            filteredList = filteredList.stream().filter(r -> {
-
-                try {
-
-                    Date tglReservasi = sdf.parse(r.getTanggalPendakian());
-
-                    return tglReservasi != null && !tglReservasi.after(tglAkhirCalendar.getTime());
-
-                } catch (ParseException e) { return false; }
-
-            }).collect(Collectors.toList());
-
-        }
-
-
-
-        adapter.updateData(filteredList);
-
-        showEmptyState(filteredList.isEmpty());
-
-    }
 
 
 
@@ -731,11 +917,11 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
 
         // Helper method to apply styling for reservation status
 
-        private void applyReservationStatusStyling(String status, TextView textView, CardView cardView) {
+                private void applyReservationStatusStyling(String status, TextView textView, CardView cardView) {
 
-            String displayText = status.replace("_", " ").toUpperCase();
+                    String displayText = TextUtil.formatStatus(status);
 
-            textView.setText(displayText);
+                    textView.setText(displayText);
 
     
 
@@ -799,15 +985,23 @@ public class TransaksiFragment extends Fragment implements TransaksiAdapter.OnTr
 
     
 
-            private void applySampahStatusStyling(String statusSampah, TextView textView, CardView cardView) {
+                        private void applySampahStatusStyling(String statusSampah, TextView textView, CardView cardView) {
 
     
 
-                String displayText = statusSampah.replace("_", " ").toUpperCase();
+                
 
     
 
-                textView.setText(displayText);
+                            String displayText = TextUtil.formatStatus(statusSampah);
+
+    
+
+                
+
+    
+
+                            textView.setText(displayText);
 
     
 
