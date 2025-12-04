@@ -75,6 +75,12 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        ViewCompat.setOnApplyWindowInsetsListener(swipeRefreshLayout, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, v.getPaddingBottom());
+            return insets;
+        });
+
         // Listener untuk navigasi
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();

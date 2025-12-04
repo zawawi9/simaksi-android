@@ -112,21 +112,29 @@ public class RegisterActivity extends AppCompatActivity {
         clearErrors();
         setLoading(true);
 
-        // Panggil Supabase
-        SupabaseAuth.registerUser(email, password, name, new SupabaseAuth.RegisterCallback() {
-            @Override
-            public void onSuccess() {
+        // Cek apakah email sudah terdaftar
+        SupabaseAuth.checkUserExists(email, exists -> {
+            if (exists) {
                 setLoading(false);
-                Toast.makeText(RegisterActivity.this, "Kode verifikasi terkirim ke email!", Toast.LENGTH_LONG).show();
+                layoutEmail.setError("Email sudah terdaftar. Silakan login.");
+            } else {
+                // Panggil Supabase
+                SupabaseAuth.registerUser(email, password, name, new SupabaseAuth.RegisterCallback() {
+                    @Override
+                    public void onSuccess() {
+                        setLoading(false);
+                        Toast.makeText(RegisterActivity.this, "Kode verifikasi terkirim ke email!", Toast.LENGTH_LONG).show();
 
-                // BERHASIL -> Ubah tampilan ke Mode Input Token
-                switchToTokenMode();
-            }
+                        // BERHASIL -> Ubah tampilan ke Mode Input Token
+                        switchToTokenMode();
+                    }
 
-            @Override
-            public void onError(String errorMessage) {
-                setLoading(false);
-                ErrorHandler.showError(findViewById(android.R.id.content), errorMessage);
+                    @Override
+                    public void onError(String errorMessage) {
+                        setLoading(false);
+                        ErrorHandler.showError(findViewById(android.R.id.content), errorMessage);
+                    }
+                });
             }
         });
     }

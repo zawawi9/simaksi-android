@@ -125,8 +125,6 @@
                         android:layout_marginStart="8dp"
                         android:text="CEK"
                         android:textSize="12sp"
-                        android:textColor="#FFFFFF"
-                        app:strokeColor="#FFFFFF"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"/>
                 </LinearLayout>

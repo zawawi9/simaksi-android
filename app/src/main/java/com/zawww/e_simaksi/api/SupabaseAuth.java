@@ -64,6 +64,26 @@ public class SupabaseAuth {
     // =============================================================================================
 
     // 1. REGISTER
+    public static void checkUserExists(String email, UserExistsCallback callback) {
+        profileService.getProfileByEmail("eq." + email, "email").enqueue(new Callback<List<Profile>>() {
+            @Override
+            public void onResponse(Call<List<Profile>> call, Response<List<Profile>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onResult(!response.body().isEmpty());
+                } else {
+                    // Terjadi error, anggap user tidak ada agar tidak memblokir registrasi
+                    callback.onResult(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Profile>> call, Throwable t) {
+                // Terjadi error, anggap user tidak ada
+                callback.onResult(false);
+            }
+        });
+    }
+
     public static void registerUser(String email, String password, String namaLengkap, RegisterCallback callback) {
         Map<String, Object> body = new HashMap<>();
         body.put("email", email);
@@ -164,9 +184,8 @@ public class SupabaseAuth {
     public static void sendPasswordResetOtp(String email, UpdateCallback callback) {
         Map<String, Object> body = new HashMap<>();
         body.put("email", email);
-        body.put("create_user", false);
 
-        authService.sendOtp(body).enqueue(new Callback<JsonObject>() {
+        authService.sendRecovery(body).enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful()) {
@@ -287,11 +306,33 @@ public class SupabaseAuth {
     }
 
     private static void handleErrorResponse(Response<?> response, ErrorHandler handler) {
+        String genericError = "Terjadi kesalahan. Silakan coba lagi.";
         try {
-            String errBody = response.errorBody() != null ? response.errorBody().string() : response.message();
-            handler.onError(errBody);
-        } catch (Exception e) {
-            handler.onError("Error: " + response.message());
+            if (response.errorBody() != null) {
+                String errBody = response.errorBody().string();
+                try {
+                    JsonObject jsonObject = com.google.gson.JsonParser.parseString(errBody).getAsJsonObject();
+                    if (jsonObject.has("error_description")) {
+                        String errorDesc = jsonObject.get("error_description").getAsString();
+                        if (errorDesc.equalsIgnoreCase("Invalid login credentials") || errorDesc.equalsIgnoreCase("invalid credential")) {
+                            handler.onError("Email atau Password Salah");
+                        } else {
+                            handler.onError(errorDesc);
+                        }
+                    } else if (jsonObject.has("msg")) {
+                        handler.onError(jsonObject.get("msg").getAsString());
+                    } else {
+                        handler.onError(genericError);
+                    }
+                } catch (Exception jsonException) {
+                    // Gagal parse JSON, tampilkan pesan generik
+                    handler.onError(genericError);
+                }
+            } else {
+                handler.onError("Terjadi error: " + response.code());
+            }
+        } catch (IOException e) {
+            handler.onError(genericError);
         }
     }
     interface ErrorHandler { void onError(String msg); }
@@ -681,6 +722,11 @@ public class SupabaseAuth {
 
         @Headers({"Content-Type: application/json",
                 "apikey: " + API_KEY})
+        @POST("auth/v1/recover")
+        Call<JsonObject> sendRecovery(@Body Map<String, Object> body);
+
+        @Headers({"Content-Type: application/json",
+                "apikey: " + API_KEY})
         @POST("auth/v1/token?grant_type=password")
         Call<JsonObject> login(@Body Map<String, Object> body);
 
@@ -712,6 +758,10 @@ public class SupabaseAuth {
         @Headers({"apikey: " + API_KEY})
         @GET("rest/v1/profiles")
         Call<List<Profile>> getProfile(@Header("Authorization") String bearerToken, @Query("id") String userId, @Query("select") String select);
+
+        @Headers({"apikey: " + API_KEY})
+        @GET("rest/v1/profiles")
+        Call<List<Profile>> getProfileByEmail(@Query("email") String email, @Query("select") String select);
 
         @Headers({"Content-Type: application/json",
                 "apikey: " + API_KEY,
@@ -823,6 +873,7 @@ public class SupabaseAuth {
     // =============================================================================================
     public interface AuthCallback { void onSuccess(String accessToken, String userId, String refreshToken); void onError(String errorMessage); }
     public interface RegisterCallback { void onSuccess(); void onError(String errorMessage); }
+    public interface UserExistsCallback { void onResult(boolean exists); }
     public interface UserInfoCallback { void onSuccess(JsonObject userData); void onError(String errorMessage); }
     public interface PromosiCallback { void onSuccess(List<Promosi> promosiList); void onError(String errorMessage); }
     public interface JadwalCallback { void onSuccess(Reservasi jadwal); void onError(String errorMessage); }
