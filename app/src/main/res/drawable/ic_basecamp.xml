@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Pin Background -->
+<path
+    android:fillColor="#D32F2F"
+    android:pathData="M12,2a7,7 0 0 0 -7,7c0,5 7,13 7,13s7,-8 7,-13a7,7 0 0 0 -7,-7z"/>
+
+    <!-- Home Icon -->
+<path
+android:fillColor="#FFFFFF"
+android:pathData="M8,13h8v6h-5v-4h-3zM12,3l7,6h-2v7h-2v-5H9v5H7v-7H5z"/>
+    </vector>

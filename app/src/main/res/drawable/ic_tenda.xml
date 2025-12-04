@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Pin hijau -->
+    <path
+        android:fillColor="#C62828"
+        android:pathData="M24,2
+            C14.06,2 6,10.06 6,20
+            c0,11.25 12.39,23.11 16.95,27.29
+            c0.61,0.56 1.5,0.56 2.11,0
+            C29.61,43.11 42,31.25 42,20
+            C42,10.06 33.94,2 24,2z" />
+
+    <!-- Tenda putih -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,30 l12,-18 l12,18 h-4 l-8,-12 l-8,12z"/>
+</vector>

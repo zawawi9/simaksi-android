@@ -1,4 +1,5 @@
-package informasi_gunung;
+package com.zawww.e_simaksi.adapter;
+
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.zawww.e_simaksi.R;
+import com.zawww.e_simaksi.model.JalurModel;
 
 import java.util.ArrayList;
 

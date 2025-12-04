@@ -1,4 +1,4 @@
-package informasi_gunung;
+package com.zawww.e_simaksi.model;
 
 public class JalurModel {
     private String nama, tanah, hambatan;
@@ -11,5 +11,5 @@ public class JalurModel {
 
     public String getNama() { return nama; }
     public String getTanah() { return tanah; }
-    public String getHambatan() { return hambatan; }
+    public String getHambatan() { return hambatan;}
 }
